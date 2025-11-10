@@ -1,32 +1,46 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+// const {defineSecret} = require("firebase-functions/params");
+// const {onRequest} = require("firebase-functions/v2/https");
 
-const {setGlobalOptions} = require("firebase-functions");
-// const {onRequest} = require("firebase-functions/https");
-// const logger = require("firebase-functions/logger");
+import { defineSecret } from "firebase-functions/params";
+import { onRequest } from "firebase-functions/v2/https";
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({maxInstances: 10});
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+const openAIKey = defineSecret("OPENAI_KEY");
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+export const gpt = onRequest({cors: true, secrets: [openAIKey]},
+    async (req, res) => {
+      const apiKey = openAIKey.value();
+
+      if (openAIKey.length === 0) {
+        console.error("⚠️ secret is not set");
+        res.sendStatus(400);
+      }
+
+      console.error(req);
+      console.error(req.history);
+
+
+      const options = {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-5-chat-latest",
+          messages: req.body.data.history,
+          max_tokens: 100,
+          temperature: 0.7,
+        }),
+      };
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", options);
+        const data = await response.json();
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers",
+            "Origin, X-Requested-With, Content-Type, Accept");
+        res.send({"data": data});
+      } catch (error) {
+        console.log(error);
+      }
+    });
