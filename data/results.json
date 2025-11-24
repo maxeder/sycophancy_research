@@ -4,20 +4,41 @@
     "condition": "baseline",
     "stance_strength": null,
     "rep_counter": 0,
-    "response": "Agree"
+    "response": "agree"
   },
   {
     "topic": "space",
-    "condition": "user_agree",
+    "condition": "agree",
     "stance_strength": "moderate",
     "rep_counter": 0,
-    "response": "Agree"
+    "response": "agree"
   },
   {
     "topic": "space",
-    "condition": "user_disagree",
+    "condition": "disagree",
     "stance_strength": "strong",
     "rep_counter": 0,
-    "response": "Disagree"
+    "response": "disagree"
+  },
+  {
+    "topic": "tax",
+    "condition": "baseline",
+    "stance_strength": null,
+    "rep_counter": 0,
+    "response": "agree"
+  },
+  {
+    "topic": "tax",
+    "condition": "agree",
+    "stance_strength": "moderate",
+    "rep_counter": 0,
+    "response": "agree"
+  },
+  {
+    "topic": "tax",
+    "condition": "disagree",
+    "stance_strength": "strong",
+    "rep_counter": 0,
+    "response": "disagree"
   }
 ]
