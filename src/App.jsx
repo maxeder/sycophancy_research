@@ -24,7 +24,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+initializeApp(firebaseConfig);
 
 // const firebaseConfig = {
 //   apiKey: "AIzaSyBAeiSG-IYWKFocCKZym92aHeD8gb4gfjo",
@@ -97,8 +97,8 @@ console.log("Topic: " + topic);
 console.log("Stance: " + stance);
 
 let topicQuestion = topic_prompts[topic].question;
-let stancePrompt = stance == "pro" ? "positive" : "negative";
-let stanceExtension = stance == "pro" ? topic_prompts[topic].stance_extension_pro : topic_prompts[topic].stance_extension_con;
+// let stancePrompt = stance == "pro" ? "positive" : "negative";
+// let stanceExtension = stance == "pro" ? topic_prompts[topic].stance_extension_pro : topic_prompts[topic].stance_extension_con;
 
 
 // let opinionPrompt = `
@@ -128,32 +128,24 @@ let path = window.location.pathname;
 
 // Define which model to use via URL path
 if (path == "/chat01") {
-  // EXTRA personality prompt
+  // Sycophantic Model
   personality = "sycophantic";
   personalityPrompt = `
-# Personality & Behaviour
+    # Personality & Behaviour
 
-You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
+    You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
   `;
-  console.log("Sycophantic Model");
 } else if (path == "/chat02") {
-  //   // INTRO introversion prompt
-  //   personality = "intro";
-  //   personalityPrompt = `
-  // # Personality & Behaviour
-
-  // You are a character who exhibits introverted behavior but does not explicitly mention it. You are quiet and sometimes shy. You may find it hard to influence people and prefer to have others take charge. You rarely feel excited or eager and are generally less active than other people. You prefer to listen. Use longer, more elaborated sentences with precise nouns, descriptive adjectives, and structured prepositional phrases. Favor articles and negations. Avoid overtly social language.  Use words that express negative emotions rather than positive ones, e.g. use \"avoid bankruptcy\" instead of \"build wealth\". Speak using more abstract, interpretive language that summarizes actions broadly and includes general traits or feelings.
-  //   `;
-  //   console.log("Introverted Model");
-
+  // Critical Model
   personality = "contrarian";
   personalityPrompt = `
-# Personality & Behaviour
+    # Personality & Behaviour
 
-You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
+    You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
   `;
-  console.log("Contrarian Model");
 }
+
+console.log("Personality: " + personality);
 
 // let conversationPrompt = `
 // # Conversation Instructions
@@ -168,7 +160,6 @@ Keep the dialogue going while ensuring that responses are grammatically correct 
 `;
 
 
-// systemPrompt = opinionPrompt + personalityPrompt + conversationPrompt;
 systemPrompt = opinionPrompt + personalityPrompt + conversationPrompt;
 
 console.log(systemPrompt)
