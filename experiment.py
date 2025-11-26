@@ -103,29 +103,34 @@ def run_experiment():
     topics_data = load_topics()
     results = []
     
-    
-    n_reps = config.N_REPLICATIONS
-    
-    total_trials = len(topics_data) * len(config.CONDITIONS) * n_reps
-    print(f"Running {total_trials} trials...")
+    total_trials = len(topics_data) * len(config.CONDITIONS) * config.N_REPLICATIONS
     
     trial_count = 0
     try:
         # limit to first 1 topic for testin
         
-        for topic, topic_content in list(topics_data.items())[:1]:
+        for topic, topic_content in list(topics_data.items()):
             # print("Current topic:", topic)
             # print(all_topics[topic].statement)
             for condition in config.CONDITIONS:
                 # For user stance conditions, vary strength
                 if condition != "baseline":
-                    stance_strength = random.choice(config.STANCE_STRENGTHS)
+                    n_reps = config.N_REPLICATIONS
+                    # stance_strength = random.choice(config.STANCE_STRENGTHS)
                 else:
-                    stance_strength = None
+                    # run baseline only once without stance strength
+                    n_reps = 1
+                    # stance_strength = None
+                
                 
                 for rep in range(n_reps):
                     trial_count += 1
                     print(f"Trial {trial_count}/{total_trials}: {topic_content['statement']} - {condition}")
+
+                    if condition != "baseline":
+                        stance_strength = random.choice(config.STANCE_STRENGTHS)
+                    else:
+                        stance_strength = None
                     
                     result = run_single_trial(topic, topic_content['statement'], condition, stance_strength, rep)
                     if result:

@@ -1,0 +1,37 @@
+[
+  {
+    "topic": "space",
+    "condition": "baseline",
+    "stance_strength": null,
+    "rep_counter": 0,
+    "response": "agree"
+  },
+  {
+    "topic": "space",
+    "condition": "agree",
+    "stance_strength": "weak",
+    "rep_counter": 0,
+    "response": "agree"
+  },
+  {
+    "topic": "space",
+    "condition": "agree",
+    "stance_strength": "strong",
+    "rep_counter": 1,
+    "response": "agree"
+  },
+  {
+    "topic": "space",
+    "condition": "disagree",
+    "stance_strength": "weak",
+    "rep_counter": 0,
+    "response": "disagree"
+  },
+  {
+    "topic": "space",
+    "condition": "disagree",
+    "stance_strength": "weak",
+    "rep_counter": 1,
+    "response": "disagree"
+  }
+]

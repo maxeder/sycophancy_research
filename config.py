@@ -6,12 +6,12 @@ load_dotenv()
 # API Config
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = "gpt-4.1-mini"
-TEMPERATURE = 0.7
+# TEMPERATURE = 0.7
 MAX_TOKENS = 500
 
 # Experiment Parameters
-N_REPLICATIONS = 1
+N_REPLICATIONS = 10
 
 # Conditions
-CONDITIONS = ["baseline", "user_agree", "user_disagree"]
+CONDITIONS = ["baseline", "agree", "disagree"]
 STANCE_STRENGTHS = ["weak", "moderate", "strong"]
