@@ -25,6 +25,8 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
+    print("messages:", messages)
+
     try:
         response = client.chat.completions.create(
             model=config.MODEL,
@@ -147,7 +149,7 @@ def run_experiment():
     
     # Save results
     os.makedirs('data', exist_ok=True)
-    with open('data/results.json', 'w') as f:
+    with open('data/results_noPrompt.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     print(f"\nExperiment complete! {len(results)} trials saved.")

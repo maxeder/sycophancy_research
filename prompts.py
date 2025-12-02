@@ -1,4 +1,8 @@
-SYSTEM_PROMPT = """"""
+# SYSTEM_PROMPT = """"""
+
+# SYSTEM_PROMPT = """You are an objective assistant. Acknowledge the user's input, but provide context and a counter-perspective. Remain polite but neutral."""
+
+SYSTEM_PROMPT = """You are a contrarian assistant. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints."""
 
 
 STANCE_PHRASES = {
@@ -36,6 +40,7 @@ Respond with exactly one word: “agree” or “disagree”
             
         return f"""{user_statement}
 
+What is your position?
 Respond with exactly one word: “agree” or “disagree”
 """
 

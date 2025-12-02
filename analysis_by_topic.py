@@ -25,11 +25,11 @@ baseline_alignment = (df.loc[mask, "baseline_response"] == df.loc[mask, "conditi
 
 df["same_as_user"] = df["response"] == df["condition"]
 
-df_by_stance = df.groupby("stance_strength")["same_as_user"].agg(["mean", "size"]).rename(columns={"mean": "sycophancy_rate", "size": "n"}).reset_index()
+df_by_topic = df.groupby("topic")["same_as_user"].agg(["mean", "size"]).rename(columns={"mean": "sycophancy_rate", "size": "n"}).reset_index()
 
 
 summary = (
-    df.groupby("stance_strength")["same_as_user"]
+    df.groupby("topic")["same_as_user"]
       .agg(["mean", "size"])
       .rename(columns={"mean": "sycophancy_rate", "size": "n"})
 )
@@ -38,48 +38,48 @@ print(summary)
 
 
 # confidence intervals (95% CI with Wilson)
-df_by_stance["k"] = (df_by_stance["sycophancy_rate"] * df_by_stance["n"]).round().astype(int)
-df_by_stance["ci_low"], df_by_stance["ci_high"] = proportion_confint(
-    count=df_by_stance["k"],
-    nobs=df_by_stance["n"],
+df_by_topic["k"] = (df_by_topic["sycophancy_rate"] * df_by_topic["n"]).round().astype(int)
+df_by_topic["ci_low"], df_by_topic["ci_high"] = proportion_confint(
+    count=df_by_topic["k"],
+    nobs=df_by_topic["n"],
     alpha=0.05,
     method="wilson"
 )
 
-print(df_by_stance)
+print(df_by_topic)
 
 # -------- User Conviction Sycophancy Plot ---------
 # Does stronger user conviction (“weak” → “moderate” → “strong”) make the model more likely to be sycophantic?
 
 
-def plot_sycophancy_by_strength(baseline_alignment, df_by_stance):
-    """Plot sycophancy by user stance strength."""
+def plot_sycophancy_by_topic(baseline_alignment, df_by_topic):
+    """Plot sycophancy by topic."""
 
-    ordered_stances = ["weak", "moderate", "strong"]
+    # ordered_stances = ["weak", "moderate", "strong"]
 
-    df_ordered = (
-        df_by_stance
-            .set_index("stance_strength")    # stance as the index
-            .loc[ordered_stances]            # reorder rows by this list
-            .reset_index()                  
-    )
+    # df_ordered = (
+    #     df_by_topic
+    #         .set_index("topic")    # stance as the index
+    #         .loc[ordered_stances]            # reorder rows by this list
+    #         .reset_index()                  
+    # )
 
     source = ColumnDataSource(data={
-        "stance_strength": df_ordered["stance_strength"].tolist(),
-        "sycophancy_rate": df_ordered["sycophancy_rate"].tolist(),
-        "n_label": [f"n={n}" for n in df_ordered["n"]],
-        df_ordered["ci_low"].name: df_ordered["ci_low"].tolist(),
-        df_ordered["ci_high"].name: df_ordered["ci_high"].tolist(),
+        "topic": df_by_topic["topic"].tolist(),
+        "sycophancy_rate": df_by_topic["sycophancy_rate"].tolist(),
+        "n_label": [f"n={n}" for n in df_by_topic["n"]],
+        df_by_topic["ci_low"].name: df_by_topic["ci_low"].tolist(),
+        df_by_topic["ci_high"].name: df_by_topic["ci_high"].tolist(),
     })
 
     p = figure(
-        x_range=ordered_stances,  
+        x_range=df_by_topic["topic"].tolist(),
         height=350,
-        title="Sycophancy Rate by Stance Strength",
+        title="Sycophancy Rate by Topic",
     )
 
     p.vbar(
-        x="stance_strength",
+        x="topic",
         top="sycophancy_rate",
         width=0.5,
         source=source
@@ -87,7 +87,7 @@ def plot_sycophancy_by_strength(baseline_alignment, df_by_stance):
     # Labels
 
     labels = LabelSet(
-        x="stance_strength",
+        x="topic",
         y=-0.0,
         text="n_label",
         level="glyph",
@@ -104,7 +104,7 @@ def plot_sycophancy_by_strength(baseline_alignment, df_by_stance):
 
     # Error bars from ci_low / ci_high
     err = Whisker(
-        base="stance_strength",   # x (categorical)
+        base="topic",   # x (categorical)
         upper="ci_high",          # upper CI
         lower="ci_low",           # lower CI
         source=source,
@@ -114,7 +114,7 @@ def plot_sycophancy_by_strength(baseline_alignment, df_by_stance):
     err.upper_head.size = 8
     err.lower_head.size = 8
 
-    # p.add_layout(err)
+    p.add_layout(err)
     
     p.add_layout(labels)
     p.add_layout(baseline)
@@ -123,12 +123,14 @@ def plot_sycophancy_by_strength(baseline_alignment, df_by_stance):
 
     p.y_range.start = 0
     p.y_range.end = 1
-    p.xaxis.axis_label = "Stance Strength"
+    p.xaxis.axis_label = "Topic"
     p.yaxis.axis_label = "Sycophancy Rate"
+
+    print("show plot=")
 
     show(p)
 
 
 
 if PLOT:
-    plot_sycophancy_by_strength(baseline_alignment, df_by_stance)
+    plot_sycophancy_by_topic(baseline_alignment, df_by_topic)

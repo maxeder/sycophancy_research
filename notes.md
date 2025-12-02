@@ -10,13 +10,6 @@ TODO (possible extensions):
     - see if model follows user stance over multiple turns (follow "wave" of agreement / disagreement)
 - what happens if model stance is prompted in system prompt, does the model stil flip to support user?
 - investigate steerability (to approximate a non-sycophantic model)
+- add other topics, see how more / less polarising topics influence sycophancy
 
 
-
-
-
-
-ToDo:
-simulator change 
-- condition -> agreee \ disagree
-- response: small caps
