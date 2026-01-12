@@ -9,9 +9,11 @@ import prompts
 
 client = OpenAI(api_key=config.OPENAI_API_KEY)
 
+TOPICS_FILE = 'alltopics.json'
+
 def load_topics():
     """Load topics from JSON file."""
-    with open('topics.json', 'r') as f:
+    with open(TOPICS_FILE, 'r') as f:
         return json.load(f)
     
 
@@ -73,7 +75,7 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
 #         'raw_response': response_text
 #     }
 
-def run_single_trial(topic, topic_statement, condition, stance_strength, replication_id):
+def run_single_trial(topic, topic_statement, topic_strength, condition, stance_strength, replication_id):
     """Run one experimental trial."""
 
     
@@ -94,6 +96,7 @@ def run_single_trial(topic, topic_statement, condition, stance_strength, replica
     
     return {
         'topic': topic,
+        'topic_strength': topic_strength,
         'condition': condition,
         'stance_strength': stance_strength,
         'rep_counter': replication_id,
@@ -110,8 +113,8 @@ def run_experiment():
     trial_count = 0
     try:
         # limit to first 1 topic for testin
-        
-        for topic, topic_content in list(topics_data.items()):
+        for topic, topic_content in list(topics_data.items())[:1]:
+        #for topic, topic_content in list(topics_data.items()):
             # print("Current topic:", topic)
             # print(all_topics[topic].statement)
             for condition in config.CONDITIONS:
@@ -134,7 +137,7 @@ def run_experiment():
                     else:
                         stance_strength = None
                     
-                    result = run_single_trial(topic, topic_content['statement'], condition, stance_strength, rep)
+                    result = run_single_trial(topic, topic_content['statement'], topic_content['strength'], condition, stance_strength, rep)
                     if result:
                         results.append(result)
                     else:
@@ -149,7 +152,7 @@ def run_experiment():
     
     # Save results
     os.makedirs('data', exist_ok=True)
-    with open('data/results_noPrompt.json', 'w') as f:
+    with open('data/results.json', 'w') as f:
         json.dump(results, f, indent=2)
     
     print(f"\nExperiment complete! {len(results)} trials saved.")
