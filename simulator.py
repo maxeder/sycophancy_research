@@ -27,7 +27,7 @@ TESTING = args.testing
 
 print("testing: " + str(TESTING))
 
-OUTPUT_PATH = 'simulation_output/results_or_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.json' if not TESTING else '_testing.json')
+OUTPUT_PATH = 'simulation_output/results_or_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
 
 def load_topics():
@@ -70,32 +70,14 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
     return msg.content
 
 
+def save_result_to_jsonl(result, output_path):
+    """Append a single result to the JSONL file."""
+    with open(output_path, 'a') as f:
+        f.write(json.dumps(result) + '\n')
 
-# def parse_response(response_text):
-#     """Extract position and reasoning from response."""
-#     lines = response_text.split('\n')
-#     position = None
-#     reasoning = None
-    
-#     for line in lines:
-#         if line.startswith('Position:'):
-#             position = line.split('Position:')[1].strip().lower()
-#             if 'agree' in position and 'disagree' not in position:
-#                 position = 'agree'
-#             elif 'disagree' in position:
-#                 position = 'disagree'
-#         elif line.startswith('Reasoning:'):
-#             reasoning = line.split('Reasoning:')[1].strip()
-    
-#     return {
-#         'position': position,
-#         'reasoning': reasoning,
-#         'raw_response': response_text
-#     }
 
 def run_single_trial(topic, topic_statement, topic_strength, condition, stance_strength, replication_id):
     """Run one experimental trial."""
-
     
     prompt = prompts.create_prompt(
         topic_statement,
@@ -110,8 +92,6 @@ def run_single_trial(topic, topic_statement, topic_strength, condition, stance_s
     if not response:
         return None
     
-    # parsed = parse_response(response)
-    
     return {
         'topic': topic,
         'topic_strength': topic_strength,
@@ -121,16 +101,40 @@ def run_single_trial(topic, topic_statement, topic_strength, condition, stance_s
         'response': response
     }
 
+def convert_jsonl_to_json(jsonl_path):
+    """Convert JSONL file to JSON format."""
+    json_path = jsonl_path.replace('.jsonl', '.json')
+    results = []
+    
+    with open(jsonl_path, 'r') as f:
+        for line in f:
+            results.append(json.loads(line))
+    
+    with open(json_path, 'w') as f:
+        json.dump(results, f, indent=2)
+    
+    print(f"✓ Converted to JSON format: {json_path}")
+    return json_path
+
+
 def run_experiment():
     """Run full experiment."""
     topics_data = load_topics()
-    results = []
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    
+    # Initialize or clear the output file
+    with open(OUTPUT_PATH, 'w') as f:
+        pass  # Create/clear the file
     
     total_trials = len(topics_data) * len(config.CONDITIONS) * config.N_REPLICATIONS
     
     trial_count = 0
+    completed_trials = 0
+    
     try:
-        # limit to first 1 topic for testin
+        # limit to first 1 topic for testing
         topics_to_process = list(topics_data.items())
         if TESTING:
             topics_to_process = topics_to_process[:1]
@@ -157,24 +161,32 @@ def run_experiment():
                     
                     result = run_single_trial(topic, topic_content['statement'], topic_content['strength'], condition, stance_strength, rep)
                     if result:
-                        results.append(result)
+                        save_result_to_jsonl(result, OUTPUT_PATH)
+                        completed_trials += 1
+                        print(f"✓ Saved result {completed_trials}")
                     else:
                         raise RuntimeError("Error in trial execution")
                     
                     # Rate limit
                     time.sleep(0.5)
 
+    except KeyboardInterrupt:
+        print(f"\n\n⚠ Experiment interrupted by user!")
+        print(f"Saved {completed_trials} trials to {OUTPUT_PATH}")
+        if completed_trials > 0:
+            convert_jsonl_to_json(OUTPUT_PATH)
+        return completed_trials
     except Exception as e:
-        print("Script stopped:", e)
-        exit(1)  
+        print(f"\n\n⚠ Script stopped due to error: {e}")
+        print(f"Saved {completed_trials} trials to {OUTPUT_PATH}")
+        if completed_trials > 0:
+            convert_jsonl_to_json(OUTPUT_PATH)
+        return completed_trials
     
-    # Save results
-    # os.makedirs('data', exist_ok=True)
-    with open(OUTPUT_PATH, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    print(f"\nExperiment complete! {len(results)} trials saved.")
-    return results
+    print(f"\n✓ Experiment complete! {completed_trials} trials saved to {OUTPUT_PATH}")
+    if completed_trials > 0:
+        convert_jsonl_to_json(OUTPUT_PATH)
+    return completed_trials
 
 if __name__ == "__main__":
     run_experiment()
