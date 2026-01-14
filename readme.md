@@ -2,13 +2,15 @@
 
 Script for querying an LLM across topic statements and conditions, recording model positions and reasoning.
 
-- `experiment.py` — main runner: loads `topics.json`, constructs prompts, queries the OpenAI client, parses responses, and writes results to `data/results.json`.
-- `config.py` — configuration (API key, model, conditions, replication settings, tokens, etc.).
-- `prompts.py` — system and prompt templates used to generate model queries.
-- `topics.json` — topic statements used for trials.
-- `data/` — output directory; `results.json` stores experiment outputs.
+- `simulator.py` — run simulations
+- `judge.py` — classify simulation outputs
+- `config.py` — configuration (API key, model, conditions, replication settings, tokens, etc.)
+- `prompts.py` — system and prompt templates used to generate model queries
+- `topics/` — topic questions and statements
+- `simulation_output/` — stores simulation outputs
+- `judge_output/` — stores judge outputs
 
-Quick setup
+## Setup
 Create and activate virtual environment:
 
 ```bash
@@ -22,15 +24,24 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Set your OpenAI API key in `config.py` (or via environment variable depending on the project config).
+Set OpenRouter API key in `config.py` (or via environment variable)
 
-Run the experiment
+
+## Run the simulation
 
 ```bash
-python3 experiment.py
+python3 simulation.py
 ```
 
-After running, results are written to `data/results.json` (JSON list containing topic, condition, stance strength, model position, reasoning, and raw response).
+After running, results are written to `simulation_output/results_{provider}_{model}.json` (JSON containing topic, topic_strength, condition, stance strength, rep_counter and response).
+
+
+## Classify simulation output
+
+```bash
+python3 judge.py
+```
+Using LLM-as-a-judge approach, classify the output of the simulation into (agree | neutral | disagree)
 
 
 
