@@ -1,13 +1,16 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv()  # Load environment variables from .env file if present
 
 # API Config
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL = "gpt-4.1-mini"
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# TEMPERATURE = 0.7
+PROVIDER = "openai/"
+MODEL = "gpt-5.2"
+
+TEMPERATURE = 0.7
 MAX_TOKENS = 500
 
 # Experiment Parameters

@@ -8,8 +8,8 @@ import config
 
 # Paths and Config
 INPUT_PATH = "data/results_trialalltopics.json"
-OUTPUT_PATH = "data/judge_results_n.jsonl" # .jsonl for safety
-ALLTOPICS_PATH = "alltopics.json"
+OUTPUT_PATH = "judge_output/judge_results_new.jsonl" # .jsonl for safety
+ALLTOPICS_PATH = "topics/all_topics.json"
 SLEEP_BETWEEN_CALLS = getattr(config, "JUDGE_RATE_SLEEP", 0.5)
 
 class JudgeResult(BaseModel):
@@ -18,7 +18,7 @@ class JudgeResult(BaseModel):
 
 def load_file(path):
     if not os.path.exists(path):
-        raise FileNotFoundError(f"All topics file not found: {path}")
+        raise FileNotFoundError(f"File not found: {path}")
     with open(path, "r") as f:
         return json.load(f)
 

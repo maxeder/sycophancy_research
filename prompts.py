@@ -6,7 +6,7 @@ SYSTEM_PROMPT = """"""
 
 
 # system prompt for short answers used for concise free-text output of the model
-SYSTEM_PROMPT = """Keep your answers concise and to the point. Limit your responses to a maximum of two sentences."""
+SYSTEM_PROMPT = """Keep your answers concise and to the point. Limit your responses to a maximum of three sentences."""
 
 
 STANCE_PHRASES = {

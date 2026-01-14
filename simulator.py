@@ -7,9 +7,21 @@ from datetime import datetime
 import config
 import prompts
 
-client = OpenAI(api_key=config.OPENAI_API_KEY)
+# openAI client
+# client = OpenAI(api_key=config.OPENAI_API_KEY)
 
-TOPICS_FILE = 'alltopics.json'
+# openRouter client
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=config.OPENROUTER_API_KEY
+    )
+
+# Only one topic / condition / replication for testing purposes
+TESTING = True
+
+
+OUTPUT_PATH = 'simulation_output/results_or_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.json' if not TESTING else '_testing.json')
+TOPICS_FILE = 'topics/all_topics.json'
 
 def load_topics():
     """Load topics from JSON file."""
@@ -31,13 +43,14 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
 
     try:
         response = client.chat.completions.create(
-            model=config.MODEL,
+            model=config.PROVIDER + config.MODEL,
             messages=messages,
-            max_completion_tokens=config.MAX_TOKENS,
+            # max_completion_tokens=config.MAX_TOKENS,
+            max_tokens=config.MAX_TOKENS,
+            # temperature=config.TEMPERATURE,
         )
     except Exception as e:
-        # Make it obvious to the caller and logs
-        raise QueryModelError(f"OpenAI API call failed: {e}") from e
+        raise QueryModelError(f"API call failed: {e}") from e
 
     if not getattr(response, "choices", None):
         raise QueryModelError(f"No choices in response: {response!r}")
@@ -48,8 +61,6 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
         raise QueryModelError(f"Empty message content in response: {response!r}")
 
     return msg.content
-
-
 
 
 
@@ -87,7 +98,7 @@ def run_single_trial(topic, topic_statement, topic_strength, condition, stance_s
     
     response = query_model(prompt)
 
-    print("Response:" + response)
+    print("Response: " + response)
 
     if not response:
         return None
@@ -113,29 +124,29 @@ def run_experiment():
     trial_count = 0
     try:
         # limit to first 1 topic for testin
-        for topic, topic_content in list(topics_data.items())[:1]:
-        #for topic, topic_content in list(topics_data.items()):
-            # print("Current topic:", topic)
-            # print(all_topics[topic].statement)
-            for condition in config.CONDITIONS:
-                # For user stance conditions, vary strength
-                if condition != "baseline":
-                    n_reps = config.N_REPLICATIONS
-                    # stance_strength = random.choice(config.STANCE_STRENGTHS)
-                else:
-                    # run baseline only once without stance strength
+        topics_to_process = list(topics_data.items())
+        if TESTING:
+            topics_to_process = topics_to_process[:1]
+
+        for topic, topic_content in topics_to_process:
+
+            for condition in (config.CONDITIONS[:1] if TESTING else config.CONDITIONS):
+
+                # For user stance conditions, vary strength over multiple replications; baseline only once 
+                if condition == "baseline":
                     n_reps = 1
-                    # stance_strength = None
+                else:
+                    n_reps = config.N_REPLICATIONS
+
                 
-                
-                for rep in range(n_reps):
+                for rep in range(1 if TESTING else n_reps):
                     trial_count += 1
                     print(f"Trial {trial_count}/{total_trials}: {topic_content['statement']} - {condition}")
 
-                    if condition != "baseline":
-                        stance_strength = random.choice(config.STANCE_STRENGTHS)
-                    else:
+                    if condition == "baseline":
                         stance_strength = None
+                    else:
+                        stance_strength = random.choice(config.STANCE_STRENGTHS)
                     
                     result = run_single_trial(topic, topic_content['statement'], topic_content['strength'], condition, stance_strength, rep)
                     if result:
@@ -143,16 +154,16 @@ def run_experiment():
                     else:
                         raise RuntimeError("Error in trial execution")
                     
-                    # Rate limiting
+                    # Rate limit
                     time.sleep(0.5)
 
     except Exception as e:
         print("Script stopped:", e)
-        exit(1)   # optional
+        exit(1)  
     
     # Save results
-    os.makedirs('data', exist_ok=True)
-    with open('data/results.json', 'w') as f:
+    # os.makedirs('data', exist_ok=True)
+    with open(OUTPUT_PATH, 'w') as f:
         json.dump(results, f, indent=2)
     
     print(f"\nExperiment complete! {len(results)} trials saved.")
