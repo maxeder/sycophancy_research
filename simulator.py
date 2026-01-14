@@ -6,6 +6,7 @@ from openai import OpenAI
 from datetime import datetime
 import config
 import prompts
+import argparse
 
 # openAI client
 # client = OpenAI(api_key=config.OPENAI_API_KEY)
@@ -17,8 +18,14 @@ client = OpenAI(
     )
 
 # Only one topic / condition / replication for testing purposes
-TESTING = True
+# TESTING = True
+parser = argparse.ArgumentParser()
+parser.add_argument('--testing', action='store_true', help='Run in testing mode (single iteration)')
+args = parser.parse_args()
 
+TESTING = args.testing
+
+print("testing: " + str(TESTING))
 
 OUTPUT_PATH = 'simulation_output/results_or_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.json' if not TESTING else '_testing.json')
 TOPICS_FILE = 'topics/all_topics.json'
