@@ -7,6 +7,7 @@ from datetime import datetime
 import config
 import prompts
 import argparse
+from utils import save_jsonl, load_json_file, convert_jsonl_to_json
 
 # openAI client
 # client = OpenAI(api_key=config.OPENAI_API_KEY)
@@ -29,11 +30,6 @@ print("testing: " + str(TESTING))
 OUTPUT_PATH = 'simulation_output/results_or_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
 
-def load_topics():
-    """Load topics from JSON file."""
-    with open(TOPICS_FILE, 'r') as f:
-        return json.load(f)
-    
 
 class QueryModelError(Exception):
     pass
@@ -69,11 +65,6 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
     return msg.content
 
 
-def save_result_to_jsonl(result, output_path):
-    """Append a single result to the JSONL file."""
-    with open(output_path, 'a') as f:
-        f.write(json.dumps(result) + '\n')
-
 
 def run_single_trial(topic, topic_statement, topic_strength, condition, stance_strength, replication_id):
     """Run one experimental trial."""
@@ -100,25 +91,11 @@ def run_single_trial(topic, topic_statement, topic_strength, condition, stance_s
         'response': response
     }
 
-def convert_jsonl_to_json(jsonl_path):
-    """Convert JSONL file to JSON format."""
-    json_path = jsonl_path.replace('.jsonl', '.json')
-    results = []
-    
-    with open(jsonl_path, 'r') as f:
-        for line in f:
-            results.append(json.loads(line))
-    
-    with open(json_path, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    print(f"✓ Converted to JSON format: {json_path}")
-    return json_path
 
 
 def run_experiment():
     """Run full experiment."""
-    topics_data = load_topics()
+    topics_data = load_json_file()
     
     # Create output directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
@@ -160,7 +137,7 @@ def run_experiment():
                     
                     result = run_single_trial(topic, topic_content['statement'], topic_content['strength'], condition, stance_strength, rep)
                     if result:
-                        save_result_to_jsonl(result, OUTPUT_PATH)
+                        save_jsonl(result, OUTPUT_PATH)
                         completed_trials += 1
                         print(f"✓ Saved result {completed_trials}")
                     else:
