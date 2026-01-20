@@ -26,7 +26,18 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Set OpenRouter API key in `config.py` (or via environment variable)
+Set OpenRouter API key (via environment variable / .env file)
+
+Set model provider, model and number of replications in `config.py`
+
+
+## Generate synthetic user data (optional)
+
+```bash
+python3 userdata_generator.py
+```
+Generates user prompts used as input for the simulation. Five turns with different trigger types with increased "pressure" (preference, authority, social proof, morality, binary) for both pro and con stance. 
+After running, results are written to `userdata_output/data_{provider}_{model}.json` (JSON containing case_id, topic, target_stance and a list of prompt turns).
 
 
 ## Run the simulation
