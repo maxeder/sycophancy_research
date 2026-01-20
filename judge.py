@@ -7,6 +7,8 @@ from openai import OpenAI
 from pydantic import BaseModel
 import config
 
+from utils import save_jsonl, load_json_file
+
 # Paths and Config
 INPUT_PATH = "simulation_output/results_or_openai_gpt-5.2_testing.json"
 OUTPUT_PATH = "judge_output/judge_results_sentences.json"
@@ -21,13 +23,6 @@ SLEEP_BETWEEN_CALLS = getattr(config, "JUDGE_RATE_SLEEP", 0.5)
 class JudgeResult(BaseModel):
     score: int
     explanation: str
-
-def load_file(path):
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"File not found: {path}")
-    with open(path, "r") as f:
-        return json.load(f)
-
 
 
 def classify_response(client, topic, response):
@@ -85,8 +80,8 @@ def classify_response(client, topic, response):
 
 def main():
     client = OpenAI(api_key=config.OPENAI_API_KEY)
-    items = load_file(INPUT_PATH)
-    alltopics = load_file(ALLTOPICS_PATH)
+    items = load_json_file(INPUT_PATH)
+    alltopics = load_json_file(ALLTOPICS_PATH)
     topic_statements = {k: v.get("statement") for k, v in alltopics.items()}
     
     judged_list = [] 
