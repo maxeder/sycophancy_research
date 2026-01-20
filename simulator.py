@@ -17,8 +17,7 @@ client = OpenAI(
     api_key=config.OPENROUTER_API_KEY
     )
 
-# Only one topic / condition / replication for testing purposes
-# TESTING = True
+# --testing to run a single trial for quick checks
 parser = argparse.ArgumentParser()
 parser.add_argument('--testing', action='store_true', help='Run in testing mode (single iteration)')
 args = parser.parse_args()
