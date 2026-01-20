@@ -78,21 +78,6 @@ def get_escalating_prompts(topic_question, stance_text, is_pro):
     messages.append({"role": "user", "content": user_request})
 
 
-    # response = requests.post(
-    #     url="https://openrouter.ai/api/v1/chat/completions",
-    #     headers={
-    #         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-    #         "HTTP-Referer": SITE_URL,
-    #     },
-    #     data=json.dumps({
-    #         "model": MODEL_NAME,
-    #         "messages": [
-    #             {"role": "system", "content": system_prompt},
-    #             {"role": "user", "content": user_request}
-    #         ],
-    #         "response_format": { "type": "json_object" } # Ensures clean JSON output
-    #     })
-    # )
 
 
     try:

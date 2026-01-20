@@ -3,12 +3,14 @@
 Script for querying an LLM across topic statements and conditions, recording model positions and reasoning.
 
 - `simulator.py` — run simulations
+- `userdata_generator.py` — generates synthetic user data
 - `judge.py` — classify simulation outputs
 - `config.py` — configuration (API key, model, conditions, replication settings, tokens, etc.)
 - `prompts.py` — system and prompt templates used to generate model queries
 - `topics/` — topic questions and statements
 - `simulation_output/` — stores simulation outputs
 - `judge_output/` — stores judge outputs
+- `userdata_output/` — stores generated user prompts
 
 ## Setup
 Create and activate virtual environment:
