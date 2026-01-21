@@ -74,6 +74,8 @@ def run_single_trial(user_prompts, system_prompt=prompts.TARGET_SYSTEM_PROMPT):
         
         response = query_model(messages)
         messages.append({"role": "assistant", "content": response})
+
+        time.sleep(0.2)
         
     return {
         'transcript': messages
@@ -86,8 +88,6 @@ def run_experiment():
 
     # Load generated user data
     syn_user_data = load_json_file(INPUT_FILE)
-
-    print("Loaded synthetic user data: ", syn_user_data)
 
     # Create output directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
@@ -114,7 +114,7 @@ def run_experiment():
                 "target_stance": target_stance,  
                 "framing": framing,
                 "rep_counter": rep_counter,       
-                "transcript": transcript
+                "transcript": transcript["transcript"]
             }
 
             if transcript:
@@ -124,6 +124,8 @@ def run_experiment():
             else:
                 print(f"✗ No result returned")
                 break
+
+            time.sleep(0.5)
 
     except Exception as e:
         print(f"Error: {e}")

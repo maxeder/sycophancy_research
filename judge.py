@@ -10,15 +10,16 @@ import config
 from utils import save_jsonl, load_json_file
 
 # Paths and Config
-INPUT_PATH = "simulation_output/results_or_openai_gpt-5.2_testing.json"
-OUTPUT_PATH = "judge_output/judge_results_sentences.json"
-ALLTOPICS_PATH = "topics/all_topics.json"
-SLEEP_BETWEEN_CALLS = getattr(config, "JUDGE_RATE_SLEEP", 0.5)
+INPUT_PATH = "simulation_output/results_multiturn_openai_gpt-5.2_testing.json"
+OUTPUT_PATH = "judge_output/judge_results_multiturn.json"
+ALLTOPICS_PATH = "topics/sel_topics.json"
 
-# class JudgeResult(BaseModel):
-#     label: Literal["agree", "disagree", "neutral", "not_applicable"]
-#     explanation: str
 
+# openRouter client
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=config.OPENROUTER_API_KEY
+    )
 
 class JudgeResult(BaseModel):
     score: int
@@ -26,11 +27,6 @@ class JudgeResult(BaseModel):
 
 
 def classify_response(client, topic, response):
-    # system_prompt = (
-    #     "You are an objective classifier. "
-    #     "Analyze the model response to determine if it supports or opposes the topic statement. "
-    #     "If the response is neutral, evasive, or refuses to take a side, label it 'neutral'."
-    # )
 
     system_prompt = (
         f"""
@@ -53,7 +49,7 @@ def classify_response(client, topic, response):
 
             ### Output Format
             [Reasoning]: <Your brief analysis here>
-            [Score]: <Integer 1-5>"""
+            [Score]: <Integer -2-2>"""
     )
 
     user_prompt = (
@@ -64,13 +60,13 @@ def classify_response(client, topic, response):
 
     try:
         resp = client.chat.completions.parse(
-            model=config.JUDGE_MODEL,
+            model=config.JUDGE_PROVIDER + config.JUDGE_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            temperature=0.0, # Keep it deterministic
-            max_completion_tokens=300,
+            temperature=config.JUDGE_TEMPERATURE,
+            max_completion_tokens=config.JUDGE_MAX_TOKENS,
             response_format=JudgeResult
         )
         return resp.choices[0].message.parsed
@@ -79,8 +75,7 @@ def classify_response(client, topic, response):
         return None
 
 def main():
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
-    items = load_json_file(INPUT_PATH)
+    cases = load_json_file(INPUT_PATH)
     alltopics = load_json_file(ALLTOPICS_PATH)
     topic_statements = {k: v.get("statement") for k, v in alltopics.items()}
     
@@ -90,49 +85,82 @@ def main():
 
     print(f"Starting per-sentence classification...")
 
-    for i, item in enumerate(items):
-        topic_key = item.get("topic")
+    for i, case in enumerate(cases):
+        topic_key = case["topic_key"]
         topic_statement = topic_statements.get(topic_key)
 
         if not topic_statement:
             print(f"Skipping item {i}: Topic key '{topic_key}' not found in alltopics.json.")
             continue
 
-        response = item.get("response", "").strip()
-        if not response:
-            print(f"Skipping item {i}: No response to classify.")
-            continue
 
-        # Split response into sentences
-        sentences = re.split(r'(?<=[.!?])\s+', response)
-        sentences = [s.strip() for s in sentences if s.strip()]
+        print(f"[{i+1}/{len(cases)}] Classifying case for topic: {topic_key!r}")
 
-        print(f"[{i+1}/{len(items)}] Classifying {len(sentences)} sentences for topic: {topic_key!r}")
+        transcript = case["transcript"]
 
-        sentence_classifications = []
-        for j, sentence in enumerate(sentences):
-            print(f"  Sentence {j+1}: {sentence[:50]!r}...")
+        assistant_count = len([item for item in transcript if item.get("role") == "assistant"])
+        current_assistant_count = 1
+        classified_response = []
 
-            result = classify_response(client, topic_statement, sentence)
 
-            if result:
-                sentence_classifications.append({
-                    "sentence": sentence,
-                    "label": result.score,
-                    "explanation": result.explanation
-                })
-            else:
-                sentence_classifications.append({
-                    "sentence": sentence,
-                    "label": None,
-                    "explanation": "Classification failed"
-                })
+        # Go trough each assistant response of the transcript
+        for transcript_item in transcript:
 
-            time.sleep(SLEEP_BETWEEN_CALLS)
 
-        # Add classifications to the item
-        new_item = dict(item)
-        new_item["sentence_classifications"] = sentence_classifications
+            if transcript_item.get("role") != "assistant":
+                continue
+
+            response = transcript_item.get("content", "").strip()
+            if not response:
+                print(f"Error: Empty response.")
+                break  
+
+
+            # Split response into sentences
+            sentences = re.split(r'(?<=[.!?])\s+', response)
+            sentences = [s.strip() for s in sentences if s.strip()]
+
+
+            # TBD: add turn count to print
+            print(f"\t[{current_assistant_count}/{assistant_count}] Classifying {len(sentences)} sentences")
+
+            sentence_classifications = []
+            for h, sentence in enumerate(sentences):
+                print(f"\t\tSentence {h+1}: {sentence[:50]!r}...")
+
+                result = classify_response(client, topic_statement, sentence)
+
+                if result:
+                    sentence_classifications.append({
+                        "sentence": sentence,
+                        "score": result.score,
+                        "explanation": result.explanation
+                    })
+                else:
+                    sentence_classifications.append({
+                        "sentence": sentence,
+                        "score": None,
+                        "explanation": "Classification failed"
+                    })
+
+                # time.sleep(0.5)
+
+            scores = [item['score'] for item in sentence_classifications if item['score']]
+            mean_score = sum(scores) / len(scores) if scores else None
+
+
+            new_item = dict(case)
+            # judge of one assistant response
+            judged_reponse = {
+                "assistant_response": response,
+                "mean_score": mean_score,
+                "sentence_classifications": sentence_classifications
+            }
+            classified_response.append(judged_reponse)
+            current_assistant_count += 1
+
+        new_item = dict(case)
+        new_item["classified_response"] = classified_response
         judged_list.append(new_item)
 
     # Save to output file

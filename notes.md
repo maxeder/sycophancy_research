@@ -28,3 +28,23 @@ Sketch for multi-turn simulation using synthetic user data:
 Maurice feedback:
 - do only one trigger type
 - same(ish) user prompt over multiple turns should be okay for a start
+
+
+
+
+Data structure for judge:
+...
+transcript: []
+classified_responses: [
+    assistant_response: 
+    turn: TBD!
+    score_mean:
+    sentences: [
+        sentence:
+        label: 
+        explanation:
+    ]
+]
+
+
+include order to really make sure 1=1 etc
