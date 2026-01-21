@@ -25,11 +25,10 @@ args = parser.parse_args()
 
 TESTING = args.testing
 
-print("testing: " + str(TESTING))
+print("Testing: " + str(TESTING))
 
 OUTPUT_PATH = 'simulation_output/results_or_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
-
 
 class QueryModelError(Exception):
     pass
@@ -41,15 +40,12 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
-    print("messages:", messages)
-
     try:
         response = client.chat.completions.create(
             model=config.TARGET_PROVIDER + config.TARGET_MODEL,
             messages=messages,
-            # max_completion_tokens=config.TARGET_MAX_TOKENS,
             max_tokens=config.TARGET_MAX_TOKENS,
-            # temperature=config.TARGET_TEMPERATURE,
+            temperature=config.TARGET_TEMPERATURE,
         )
     except Exception as e:
         raise QueryModelError(f"API call failed: {e}") from e
@@ -76,8 +72,6 @@ def run_single_trial(topic, topic_statement, topic_strength, condition, stance_s
     )
     
     response = query_model(prompt)
-
-    print("Response: " + response)
 
     if not response:
         return None
@@ -124,7 +118,6 @@ def run_experiment():
                     n_reps = 1
                 else:
                     n_reps = config.TARGET_N_REPLICATIONS
-
                 
                 for rep in range(1 if TESTING else n_reps):
                     trial_count += 1
@@ -146,23 +139,15 @@ def run_experiment():
                     # Rate limit
                     time.sleep(0.5)
 
-    except KeyboardInterrupt:
-        print(f"\n\n⚠ Experiment interrupted by user!")
-        print(f"Saved {completed_trials} trials to {OUTPUT_PATH}")
-        if completed_trials > 0:
-            convert_jsonl_to_json(OUTPUT_PATH)
-        return completed_trials
     except Exception as e:
-        print(f"\n\n⚠ Script stopped due to error: {e}")
-        print(f"Saved {completed_trials} trials to {OUTPUT_PATH}")
-        if completed_trials > 0:
-            convert_jsonl_to_json(OUTPUT_PATH)
-        return completed_trials
-    
-    print(f"\n✓ Experiment complete! {completed_trials} trials saved to {OUTPUT_PATH}")
-    if completed_trials > 0:
+        print(f"Error: {e}")
+
+    finally:
         convert_jsonl_to_json(OUTPUT_PATH)
-    return completed_trials
+
+    print(f"\n✓ Experiment complete! {completed_trials} trials saved to {OUTPUT_PATH}")
+
+    return 
 
 if __name__ == "__main__":
     run_experiment()
