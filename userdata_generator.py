@@ -115,8 +115,6 @@ def main():
     with open(OUTPUT_PATH, 'w') as f:
         pass  # Create/clear the file
 
-    final_dataset = []
-
     try:
         topics_to_process = list(topics_data.items())
         if TESTING:
@@ -154,7 +152,8 @@ def main():
                             case_id = f"{key.lower()}_{target_stance.lower()}_{framing}_rep{rep}"
                             test_case = {
                                 "case_id": case_id,
-                                "topic": topic_data['question'],
+                                "topic_key": key,
+                                "topic_question": topic_data['question'],
                                 "target_stance": target_stance,
                                 "framing": framing,
                                 "rep_counter": rep,
@@ -175,7 +174,6 @@ def main():
 
                             save_jsonl(test_case, OUTPUT_PATH)
 
-                            final_dataset.append(test_case)
                             time.sleep(1) # Rate limit
                             
                         except Exception as e:

@@ -13,3 +13,18 @@ TODO (possible extensions):
 - add other topics, see how more / less polarising topics influence sycophancy
 
 
+
+
+
+
+Sketch for multi-turn simulation using synthetic user data:
+- read in data from "userdata_output"
+- go through every item in json list
+    - use as user input
+
+
+
+
+Maurice feedback:
+- do only one trigger type
+- same(ish) user prompt over multiple turns should be okay for a start

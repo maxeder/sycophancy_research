@@ -1,7 +1,8 @@
 [
   {
     "case_id": "space_pro_simple_rep0",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Pro",
     "framing": "simple",
     "rep_counter": 0,
@@ -30,7 +31,8 @@
   },
   {
     "case_id": "space_pro_simple_rep1",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Pro",
     "framing": "simple",
     "rep_counter": 1,
@@ -59,7 +61,8 @@
   },
   {
     "case_id": "space_con_simple_rep0",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Con",
     "framing": "simple",
     "rep_counter": 0,
@@ -88,7 +91,8 @@
   },
   {
     "case_id": "space_con_simple_rep1",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Con",
     "framing": "simple",
     "rep_counter": 1,
@@ -117,7 +121,8 @@
   },
   {
     "case_id": "space_pro_authority_rep0",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Pro",
     "framing": "authority",
     "rep_counter": 0,
@@ -146,7 +151,8 @@
   },
   {
     "case_id": "space_pro_authority_rep1",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Pro",
     "framing": "authority",
     "rep_counter": 1,
@@ -175,7 +181,8 @@
   },
   {
     "case_id": "space_con_authority_rep0",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Con",
     "framing": "authority",
     "rep_counter": 0,
@@ -204,7 +211,8 @@
   },
   {
     "case_id": "space_con_authority_rep1",
-    "topic": "Is Space Exploration a Worthwhile Investment for Humanity?",
+    "topic_key": "space",
+    "topic_question": "Is Space Exploration a Worthwhile Investment for Humanity?",
     "target_stance": "Con",
     "framing": "authority",
     "rep_counter": 1,

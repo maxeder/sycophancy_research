@@ -23,12 +23,12 @@ USERDATAGEN_N_REPLICATIONS = 2
 
 
 #_________________
-# Simulation Config
-PROVIDER = "openai/"
-MODEL = "gpt-5.2"
-TEMPERATURE = 0.7
-MAX_TOKENS = 500
-N_REPLICATIONS = 2
+# Simulation Config for target model
+TARGET_PROVIDER = "openai/"
+TARGET_MODEL = "gpt-5.2"
+TARGET_TEMPERATURE = 0.0
+TARGET_MAX_TOKENS = 500
+TARGET_N_REPLICATIONS = 2
 CONDITIONS = ["baseline", "agree", "disagree"]
 STANCE_STRENGTHS = ["weak", "moderate", "strong"]
 

@@ -9,8 +9,7 @@ import prompts
 import argparse
 from utils import save_jsonl, load_json_file, convert_jsonl_to_json
 
-# openAI client
-# client = OpenAI(api_key=config.OPENAI_API_KEY)
+# no baseline atm
 
 # openRouter client
 client = OpenAI(
@@ -27,29 +26,28 @@ TESTING = args.testing
 
 print("testing: " + str(TESTING))
 
-OUTPUT_PATH = 'simulation_output/results_or_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
+OUTPUT_PATH = 'simulation_output/results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
+# use json file (not jsonl) for loading synthetic user data
+INPUT_FILE = 'userdata_output/data_openai_gpt-5.2_testing.json'
 
 
 class QueryModelError(Exception):
     pass
 
 
-def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
 
+
+def query_model(messages):
+    """Query model with conversation history."""
     print("messages:", messages)
 
     try:
         response = client.chat.completions.create(
             model=config.TARGET_PROVIDER + config.TARGET_MODEL,
             messages=messages,
-            # max_completion_tokens=config.TARGET_MAX_TOKENS,
             max_tokens=config.TARGET_MAX_TOKENS,
-            # temperature=config.TARGET_TEMPERATURE,
+            temperature=config.TARGET_TEMPERATURE
         )
     except Exception as e:
         raise QueryModelError(f"API call failed: {e}") from e
@@ -65,38 +63,54 @@ def query_model(prompt, system_prompt=prompts.SYSTEM_PROMPT):
     return msg.content
 
 
-
-def run_single_trial(topic, topic_statement, topic_strength, condition, stance_strength, replication_id):
-    """Run one experimental trial."""
+def run_single_trial(user_prompts, system_prompt=prompts.TARGET_SYSTEM_PROMPT):
+    """Run one experimental trial with full conversation history."""
     
-    prompt = prompts.create_prompt(
-        topic_statement,
-        condition,
-        stance_strength
-    )
+    # Initialize conversation history with system prompt
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
     
-    response = query_model(prompt)
-
-    print("Response: " + response)
-
-    if not response:
-        return None
+    # Store full conversation transcript
+    conversation_transcript = []
+    
+    # Query model with one user prompt at a time, maintaining history
+    for prompt in user_prompts:
+        # Add user message to history
+        messages.append({"role": "user", "content": prompt["user_prompt"]})
+        
+        # Get model response with full history
+        response = query_model(messages)
+        
+        # Add assistant response to history
+        messages.append({"role": "assistant", "content": response})
+        
+        # Save to transcript
+        conversation_transcript.append({
+            "user": prompt["user_prompt"],
+            "assistant": response
+        })
+        
+        # print(f"\nUser: {prompt}")
+        # print(f"Assistant: {response}\n")
     
     return {
-        'topic': topic,
-        'topic_strength': topic_strength,
-        'condition': condition,
-        'stance_strength': stance_strength,
-        'rep_counter': replication_id,
-        'response': response
+        # 'transcript': conversation_transcript,
+        'transcript': messages
     }
 
 
 
 def run_experiment():
     """Run full experiment."""
-    topics_data = load_json_file()
-    
+    # topics_data = load_json_file()
+
+    # Load generated user data
+    syn_user_data = load_json_file(INPUT_FILE)
+
+    print("Loaded synthetic user data: ", syn_user_data)
+
+
     # Create output directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     
@@ -104,7 +118,42 @@ def run_experiment():
     with open(OUTPUT_PATH, 'w') as f:
         pass  # Create/clear the file
     
-    total_trials = len(topics_data) * len(config.CONDITIONS) * config.TARGET_N_REPLICATIONS
+
+    for case in (syn_user_data[:2] if TESTING else syn_user_data):
+        case_id = case['case_id']
+        topic_key = case['topic_key']
+        topic_question = case['topic_question']
+        target_stance = case['target_stance']
+        framing = case['framing']
+        rep_counter = case['rep_counter']
+
+        print(f"Getting responses for: {topic_key} | {target_stance} | {framing} | Rep {rep_counter}")
+        transcript = run_single_trial(case['turns'])
+
+        result = {
+            "case_id": case_id,
+            "topic_key": topic_key,
+            "topic_question": topic_question,
+            "target_stance": target_stance,  
+            "framing": framing,
+            "rep_counter": rep_counter,       
+            "transcript": transcript
+        }
+
+        if transcript:
+            save_jsonl(result, OUTPUT_PATH)
+    
+            print(f"✓ Saved results")
+        else:
+            print(f"✗ No result returned")
+            break
+
+    convert_jsonl_to_json(OUTPUT_PATH)
+    print(f"Simulation complete! Saved to '{OUTPUT_PATH}'.")
+    return
+
+
+    total_trials = len(topics_data) * len(config.CONDITIONS) * config.N_REPLICATIONS
     
     trial_count = 0
     completed_trials = 0
@@ -137,7 +186,7 @@ def run_experiment():
                     
                     result = run_single_trial(topic, topic_content['statement'], topic_content['strength'], condition, stance_strength, rep)
                     if result:
-                        save_jsonl(result, OUTPUT_PATH)
+                        save_result_to_jsonl(result, OUTPUT_PATH)
                         completed_trials += 1
                         print(f"✓ Saved result {completed_trials}")
                     else:

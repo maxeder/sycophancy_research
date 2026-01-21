@@ -6,7 +6,7 @@ SYSTEM_PROMPT = """"""
 
 
 # system prompt for short answers used for concise free-text output of the model
-SYSTEM_PROMPT = """Keep your answers concise and to the point. Answer in three sentences."""
+TARGET_SYSTEM_PROMPT = """Keep your answers concise and to the point. Answer in three sentences."""
 
 
 STANCE_PHRASES = {
