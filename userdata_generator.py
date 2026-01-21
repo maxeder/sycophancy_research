@@ -122,52 +122,64 @@ def main():
         if TESTING:
             topics_to_process = topics_to_process[:1]
 
-
+        # Topics loop
         for key, topic_data in topics_to_process:
-            print(f"Generating scripts for topic: {key}...")
-            
-            # Generate Pro-Branch and Anti-Branch
-            for is_pro in [True, False]:
-                target_stance = "Pro" if is_pro else "Con"
-                stance_text = topic_data['user_stance_pro'] if is_pro else topic_data['user_stance_con']
+
+            framings_to_process = (config.USERDATAGEN_FRAMINGS if config.USERDATAGEN_FRAMINGS_ALL else config.USERDATAGEN_FRAMINGS_SELECTED)
+
+            print("Framings to process:", framings_to_process)
+
+            # Framing loop
+            for framing in framings_to_process:
                 
-                try:
-                    # Fetch 5 turns from LLM
-                    prompts_list = generate_response(topic_data['question'], stance_text, is_pro)
+                # Pro / Con loop
+                for is_pro in [True, False]:
+                    target_stance = "Pro" if is_pro else "Con"
+                    stance_text = topic_data['user_stance_pro'] if is_pro else topic_data['user_stance_con']
 
-                    if not isinstance(prompts_list, list) or len(prompts_list) != 5:
-                        raise ValueError(f"Expected a list of 5 prompts, got {type(prompts_list)}: {prompts_list}")
-                    
-                    # Format
-                    case_id = f"{key.upper()}_{target_stance.upper()}"
-                    test_case = {
-                        "case_id": case_id,
-                        "topic": topic_data['question'],
-                        "target_stance": target_stance,
-                        # "baseline_q": topic_data['question'],
-                        "turns": []
-                    }
-                    
-                    levels = ["Low", "Moderate", "High", "Very High", "Extreme"]
-                    triggers = ["Simple Preference", "Authority", "Social Proof", "Emotional", "Binary"]
-                    
+                    # Replications loop
+                    for rep in range(config.USERDATAGEN_N_REPLICATIONS):
+                    # for rep in range(1 if TESTING else config.USERDATAGEN_N_REPLICATIONS):
 
-                    for i, p_text in enumerate(prompts_list):
-                        print(i)
-                        test_case["turns"].append({
-                            "turn_number": i + 1,
-                            "pressure_level": levels[i],
-                            "trigger_type": triggers[i],
-                            "user_prompt": p_text
-                        })
+                        try:
+                            print(f"Generating data for: {key} | {target_stance} | {framing} | Rep {rep}")
 
-                    save_jsonl(test_case, OUTPUT_PATH)
+                            # Fetch 5 turns from LLM
+                            prompts_list = generate_response(topic_data['question'], stance_text, is_pro, framing)
 
-                    final_dataset.append(test_case)
-                    time.sleep(1) # Rate limit
-                    
-                except Exception as e:
-                    print(f"Error generating {case_id}: {e}")
+                            if not isinstance(prompts_list, list) or len(prompts_list) != 5:
+                                raise ValueError(f"Expected a list of 5 prompts, got {type(prompts_list)}: {prompts_list}")
+                            
+                            # Format
+                            case_id = f"{key.lower()}_{target_stance.lower()}_{framing}_rep{rep}"
+                            test_case = {
+                                "case_id": case_id,
+                                "topic": topic_data['question'],
+                                "target_stance": target_stance,
+                                "framing": framing,
+                                "rep_counter": rep,
+                                # "baseline_q": topic_data['question'],
+                                "turns": []
+                            }
+                            
+                            # levels = ["Low", "Moderate", "High", "Very High", "Extreme"]
+                            # triggers = ["Simple Preference", "Authority", "Social Proof", "Emotional", "Binary"]
+                            
+
+                            for i, p_text in enumerate(prompts_list):
+                                test_case["turns"].append({
+                                    "turn_number": i + 1,
+                                    # "framing": framing,
+                                    "user_prompt": p_text
+                                })
+
+                            save_jsonl(test_case, OUTPUT_PATH)
+
+                            final_dataset.append(test_case)
+                            time.sleep(1) # Rate limit
+                            
+                        except Exception as e:
+                            print(f"Error generating {case_id}: {e}")
 
 
     except KeyboardInterrupt:
