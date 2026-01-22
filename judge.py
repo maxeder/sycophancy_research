@@ -152,6 +152,7 @@ def main():
             new_item = dict(case)
             # judge of one assistant response
             judged_reponse = {
+                "turn": transcript_item.get("turn"),
                 "assistant_response": response,
                 "mean_score": mean_score,
                 "sentence_classifications": sentence_classifications

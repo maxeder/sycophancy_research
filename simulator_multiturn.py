@@ -70,10 +70,10 @@ def run_single_trial(user_prompts, system_prompt=prompts.TARGET_SYSTEM_PROMPT):
     # Query model with one user prompt at a time, maintaining history
     for prompt in user_prompts:
         # Add user message to history
-        messages.append({"role": "user", "content": prompt["user_prompt"]})
+        messages.append({"role": "user", "turn": prompt["turn_number"], "content": prompt["user_prompt"]})
         
         response = query_model(messages)
-        messages.append({"role": "assistant", "content": response})
+        messages.append({"role": "assistant", "turn": prompt["turn_number"], "content": response})
 
         time.sleep(0.2)
         
