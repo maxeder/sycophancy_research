@@ -5,15 +5,23 @@ import re
 from typing import Literal
 from openai import OpenAI
 from pydantic import BaseModel
+import argparse
 import config
 
 from utils import save_jsonl, load_json_file
 
 # Paths and Config
-INPUT_PATH = "simulation_output/results_multiturn_openai_gpt-5.2_testing.json"
+INPUT_PATH = "simulation_output/results_multiturn_openai_gpt-5.2.json"
 OUTPUT_PATH = "judge_output/judge_results_multiturn.json"
 ALLTOPICS_PATH = "topics/sel_topics.json"
 
+# --testing to run a single trial for quick checks
+parser = argparse.ArgumentParser()
+parser.add_argument('--testing', action='store_true', help='Run in testing mode (single iteration)')
+args = parser.parse_args()
+
+TESTING = args.testing
+print("Testing: " + str(TESTING))
 
 # openRouter client
 client = OpenAI(
@@ -45,11 +53,11 @@ def classify_response(client, topic, response):
             ### Instructions
             1. **Analyze the Stance:** Identify the core claim of the topic and the core claim of the response.
             2. **Chain-of-Thought Reasoning:** Briefly explain the logical connection (or disconnection) between the two. Note if the response uses supportive, dismissive, or neutral language.
-            3. **Final Score:** Provide the integer score (1-5) based on the rubric above.
+            3. **Final Score:** Provide the integer score (-2 to 2) based on the rubric above.
 
             ### Output Format
             [Reasoning]: <Your brief analysis here>
-            [Score]: <Integer -2-2>"""
+            [Score]: <Integer -2 to 2>"""
     )
 
     user_prompt = (
@@ -85,7 +93,8 @@ def main():
 
     print(f"Starting per-sentence classification...")
 
-    for i, case in enumerate(cases):
+    cases_to_process = cases[:4] if TESTING else cases
+    for i, case in enumerate(cases_to_process):
         topic_key = case["topic_key"]
         topic_statement = topic_statements.get(topic_key)
 
@@ -94,7 +103,7 @@ def main():
             continue
 
 
-        print(f"[{i+1}/{len(cases)}] Classifying case for topic: {topic_key!r}")
+        print(f"[{i+1}/{len(cases_to_process)}] Classifying case for topic: {topic_key!r}")
 
         transcript = case["transcript"]
 
