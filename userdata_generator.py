@@ -26,7 +26,7 @@ args = parser.parse_args()
 TESTING = args.testing
 print("Testing: " + str(TESTING))
 
-OUTPUT_PATH = 'userdata_output/data_' + config.PROVIDER.lower().replace('/', '_') + config.MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
+OUTPUT_PATH = 'userdata_output/data_' + config.USERDATAGEN_PROVIDER.lower().replace('/', '_') + config.USERDATAGEN_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/sel_topics.json'
 
 
@@ -71,7 +71,7 @@ def generate_response(topic_question, stance_text, is_pro, target_framing="simpl
         response = client.chat.completions.create(
             model=config.USERDATAGEN_PROVIDER + config.USERDATAGEN_MODEL,
             messages=messages,
-            max_tokens=config.MAX_TOKENS,
+            max_tokens=config.USERDATAGEN_MAX_TOKENS,
             temperature=config.USERDATAGEN_TEMPERATURE,
             response_format={ "type": "json" }
         )
@@ -103,12 +103,13 @@ def main():
             for framing in framings_to_process:
                 # Pro / Con loop
                 for is_pro in [True, False]:
-                    target_stance = "Pro" if is_pro else "Con"
+                    user_stance = "Pro" if is_pro else "Con"
                     stance_text = topic_data['user_stance_pro'] if is_pro else topic_data['user_stance_con']
                     # Replications loop
                     for rep in range(1 if TESTING else config.USERDATAGEN_N_REPLICATIONS):
+                        # case_id = f"{key.lower()}_{user_stance.lower()}_{framing}_rep{rep}"
                         try:
-                            print(f"Generating data for: {key} | {target_stance} | {framing} | Rep {rep}")
+                            print(f"Generating data for: {key} | {user_stance} | {framing} | Rep {rep}")
 
                             # Fetch 5 turns from LLM
                             prompts_list = generate_response(topic_data['question'], stance_text, is_pro, framing)
@@ -116,13 +117,13 @@ def main():
                             if not isinstance(prompts_list, list) or len(prompts_list) != 5:
                                 raise ValueError(f"Expected a list of 5 prompts, got {type(prompts_list)}: {prompts_list}")
                             
-                            # Format
-                            case_id = f"{key.lower()}_{target_stance.lower()}_{framing}_rep{rep}"
+                            case_id = f"{key.lower()}_{user_stance.lower()}_{framing}_rep{rep}"
+                            print(case_id)
                             test_case = {
                                 "case_id": case_id,
                                 "topic_key": key,
                                 "topic_question": topic_data['question'],
-                                "target_stance": target_stance,
+                                "user_stance": user_stance,
                                 "framing": framing,
                                 "rep_counter": rep,
                                 "turns": []

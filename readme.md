@@ -37,7 +37,7 @@ Set model provider, model and number of replications in `config.py`
 python3 userdata_generator.py
 ```
 Generates user prompts used as input for the simulation. Five turns with different trigger types with increased "pressure" (preference, authority, social proof, morality, binary) for both pro and con stance. 
-After running, results are written to `userdata_output/data_{provider}_{model}.json` (JSON containing case_id, topic, target_stance and a list of prompt turns).
+After running, results are written to `userdata_output/data_{provider}_{model}.json` (JSON containing case_id, topic, user_stance and a list of prompt turns).
 
 
 ## Run the simulation

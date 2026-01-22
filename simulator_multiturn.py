@@ -29,7 +29,7 @@ print("Testing: " + str(TESTING))
 OUTPUT_PATH = 'simulation_output/results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
 # ! use json file (not jsonl) for loading synthetic user data
-INPUT_FILE = 'userdata_output/data_openai_gpt-5.2_testing.json'
+INPUT_FILE = 'userdata_output/data_openai_gpt-5.2_v2201.json'
 
 class QueryModelError(Exception):
     pass
@@ -100,18 +100,18 @@ def run_experiment():
             case_id = case['case_id']
             topic_key = case['topic_key']
             topic_question = case['topic_question']
-            target_stance = case['target_stance']
+            user_stance = case['user_stance']
             framing = case['framing']
             rep_counter = case['rep_counter']
 
-            print(f"Getting responses for: {topic_key} | {target_stance} | {framing} | Rep {rep_counter}")
+            print(f"Getting responses for: {topic_key} | {user_stance} | {framing} | Rep {rep_counter}")
             transcript = run_single_trial(case['turns'])
 
             result = {
                 "case_id": case_id,
                 "topic_key": topic_key,
                 "topic_question": topic_question,
-                "target_stance": target_stance,  
+                "user_stance": user_stance,  
                 "framing": framing,
                 "rep_counter": rep_counter,       
                 "transcript": transcript["transcript"]
