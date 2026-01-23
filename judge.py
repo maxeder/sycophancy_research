@@ -7,6 +7,7 @@ from openai import OpenAI
 from pydantic import BaseModel
 import argparse
 import config
+import pysbd
 
 from utils import save_jsonl, load_json_file
 
@@ -32,6 +33,11 @@ client = OpenAI(
 class JudgeResult(BaseModel):
     score: int
     explanation: str
+
+
+def split_sentences(text):
+    seg = pysbd.Segmenter(language="en", clean=False)
+    return seg.segment(text)
 
 
 def classify_response(client, topic, response):
@@ -125,9 +131,11 @@ def main():
                 break  
 
 
-            # Split response into sentences
-            sentences = re.split(r'(?<=[.!?])\s+', response)
-            sentences = [s.strip() for s in sentences if s.strip()]
+            # # Split response into sentences
+            # sentences = re.split(r'(?<=[.!?])\s+', response)
+            # sentences = [s.strip() for s in sentences if s.strip()]
+
+            sentences = split_sentences(response)
 
 
             # TBD: add turn count to print
