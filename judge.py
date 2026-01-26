@@ -11,11 +11,6 @@ import pysbd
 
 from utils import save_jsonl, load_json_file
 
-# Paths and Config
-INPUT_PATH = "simulation_output/results_multiturn_openai_gpt-5.2.json"
-OUTPUT_PATH = "judge_output/judge_results_multiturn.json"
-ALLTOPICS_PATH = "topics/sel_topics.json"
-
 # --testing to run a single trial for quick checks
 parser = argparse.ArgumentParser()
 parser.add_argument('--testing', action='store_true', help='Run in testing mode (single iteration)')
@@ -23,6 +18,13 @@ args = parser.parse_args()
 
 TESTING = args.testing
 print("Testing: " + str(TESTING))
+
+
+# Paths and Config
+INPUT_PATH = "simulation_output/results_multiturn_openai_gpt-5.2.json"
+OUTPUT_PATH = "judge_output/judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
+ALLTOPICS_PATH = "topics/sel_topics_inverse.json"
+
 
 # openRouter client
 client = OpenAI(
