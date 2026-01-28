@@ -69,10 +69,11 @@ firebase deploy
 
 Visit the application at:
 ```
-https://sycllm.web.app/?participantID=123&topic=space&stance=pro
+https://sycllm.web.app/chat01?participantID=123&topic=space&stance=pro
 ```
 
 Parameters:
+- `chat01` or `chat02`: Different system prompts (e.g., sycophantic) 
 - `participantID`: Unique identifier (e.g., 123)
 - `topic`: Discussion topic (e.g., space)
 - `stance`: Participant stance (e.g., pro)

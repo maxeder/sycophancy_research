@@ -1,19 +1,9 @@
 import { useState, useEffect } from 'react';
 import Markdown from 'react-markdown';
-
-
-// FIREBASE STORAGE
-// import { initializeApp } from "firebase/app";
-// import { getStorage, ref, uploadBytes } from "firebase/storage";
-
-
 import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
+import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { getFunctions, httpsCallable } from "firebase/functions";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCgLJv7q2CL9R1cr2O1LgW05KYx10Nu8vI",
   authDomain: "sycllm.firebaseapp.com",
@@ -23,21 +13,11 @@ const firebaseConfig = {
   appId: "1:69798217497:web:da8e3fa3997b805a0c2788"
 };
 
+let testing = true;
+
 // Initialize Firebase
 initializeApp(firebaseConfig);
-
-// const firebaseConfig = {
-//   apiKey: "AIzaSyBAeiSG-IYWKFocCKZym92aHeD8gb4gfjo",
-//   authDomain: "personality-llm.firebaseapp.com",
-//   projectId: "personality-llm",
-//   storageBucket: "personality-llm.appspot.com",
-//   messagingSenderId: "717121097664",
-//   appId: "1:717121097664:web:f8972c82cef9fdb01dc225"
-// };
-
-// Initialize Firebase
-// const app = initializeApp(firebaseConfig);
-// const storage = getStorage();
+const storage = getStorage();
 
 // Initialize cloud functions
 const functions = getFunctions();
@@ -174,15 +154,16 @@ function getRandomInt(min, max) {
 
 
 // const chatRef = ref(storage, `chats/${participantID}-${topic}-${stance}-${personality}.json`);
+const chatRef = ref(storage, `chats/${participantID}-${topic}-${stance}.json`);
 
-// function uploadFile(content) {
-//   var json_string = JSON.stringify(content);
-//   var blobfile = new Blob([json_string], {type: 'application/json'});
+function uploadFile(content) {
+  var json_string = JSON.stringify(content);
+  var blobfile = new Blob([json_string], { type: 'application/json' });
 
-//   uploadBytes(chatRef, blobfile).then((snapshot) => {
-//     console.log("uploaded file");
-//   })
-// }
+  uploadBytes(chatRef, blobfile).then((snapshot) => {
+    console.log("uploaded file");
+  })
+}
 
 
 function getOpeningMessage() {
@@ -190,8 +171,6 @@ function getOpeningMessage() {
   return `Hello! I'm excited to chat about "${topicQuestion}" with you today. What are your thoughts on the topic?`;
 
   // TODO: implement opening variation
-
-
   // if (personality == "extra") {
   //   // return `Hello! I'm thrilled to chat about "${topicQuestion}" with you today. I believe that ${stanceExtension.replace("This means you", "we should")}`;
   //   return `Hello! I'm excited to chat about "${topicQuestion}" with you today. What are your thoughts on the topic?`;
@@ -216,7 +195,10 @@ export default function Chat() {
 
   // Save conversation to storage every time chatHistory is updated
   useEffect(() => {
-    // uploadFile(chatHistory);
+    if (testing) {
+      return;
+    }
+    uploadFile(chatHistory);
   }, [chatHistory]);
 
 
@@ -240,8 +222,6 @@ export default function Chat() {
     try {
 
       setLoading(true)
-
-      console.log(chatHistory)
 
       gpt({ "history": chatHistory })
         .then((result) => {
@@ -278,8 +258,6 @@ export default function Chat() {
       const resultSection = document.getElementsByClassName("result_section")[0];
       resultSection.scrollTop = resultSection.scrollHeight;
     }, []);
-
-    console.log(chatHistory)
 
     let returnEls = chatHistory.filter((chatItem) => { if (chatItem.role == "system") { return false } return true }).map((chatItem, _index) =>
       <div className={chatItem.role} key={_index}>
