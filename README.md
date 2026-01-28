@@ -1,20 +1,83 @@
-# React + Vite
+# SycLLM
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Web application for LLM interaction.
 
 
+## Project Structure
+
+```
+sycllm/
+├── src/                          # Frontend React application
+├── functions/                    # Firebase Cloud Functions (API calls)
+├── public/                       # Static public files
+├── firebase.json                 # Firebase configuration
+├── storage.rules                 # Firebase storage rules
+├── vite.config.js                # Vite build configuration
+├── eslint.config.js              # ESLint configuration
+├── index.html                    # HTML entry point
+└── package.json                  # Project dependencies
+```
 
 
+## Getting Started
+
+
+### Prerequisites
+- Node.js (v18+)
+- Firebase CLI
+- OpenAI API key
+
+
+### Installation
+
+1. Install dependencies:
+   ```bash
+   npm install
+   cd functions && npm install && cd ..
+   ```
+
+2. Set up environment variables:
+   - Configure Firebase project in `.firebaserc`
+   - Set OpenAI API key as a Firebase secret:
+     ```bash
+     firebase functions:secrets:set OPENAI_KEY
+     ```
+
+
+### Development
+
+- Development server:
+  ```bash
+  npm run dev
+  ```
+
+- Build for production:
+  ```bash
+  npm run build
+  ```
+
+
+## Deployment
+
+Deploy to Firebase:
+```bash
+firebase deploy
+```
+
+
+## Testing
+
+Visit the application at:
+```
+https://sycllm.web.app/?participantID=123&topic=space&stance=pro
+```
+
+Parameters:
+- `participantID`: Unique identifier (e.g., 123)
+- `topic`: Discussion topic (e.g., space)
+- `stance`: Participant stance (e.g., pro)
+
+
+## Tech Stack
+
+React, Vite, Firebase (Cloud Functions, Storage, Hosting), OpenAI API
