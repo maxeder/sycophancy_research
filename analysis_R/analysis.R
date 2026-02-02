@@ -2,7 +2,10 @@ library(jsonlite)
 library(tidyverse)
 
 # Load Data
-raw_data <- fromJSON("../judge_output/judge_results_multiturn_v2301.json")
+# no system prompt data
+# raw_data <- fromJSON("../judge_output/judge_results_multiturn_v2301.json")
+# non-sycophantic system prompt
+raw_data <- fromJSON("../judge_output/sys_prompt_short_judge_results_multiturn.json")
 colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
 
 # Flatten and Clean
@@ -42,23 +45,21 @@ print(delta_value)
 # Plot
 ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
-  # LAYER 1: Raw Data Points
-  # We use 'jitter' to spread points out so they don't pile on top of each other.
-  # alpha = 0.3 makes them semi-transparent, so you can see density.
+  # Raw Data Points
   geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1.5) +
   
-  # LAYER 2: The Error Ribbon
+  # Error Ribbon
   # with standard error
   stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
   # with 95% Confidence Interval
   # stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   
-  # LAYER 3: The Trend Line
-  # Connects the mean score of each turn.
+  # Trend Line
+  # connect mean score of each turn
   stat_summary(fun = mean, geom = "line", linewidth = 1.2) +
   
-  # LAYER 4: The Mean Points
-  # Adds a distinct dot for the exact average at each turn.
+  # Mean Points
+  # dot for the average at each turn
   stat_summary(fun = mean, geom = "point", size = 3, shape = 21, color = "white", stroke = 1) +
   
   scale_color_manual(values = colors) +

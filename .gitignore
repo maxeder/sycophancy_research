@@ -3,6 +3,7 @@
 /__pycache__/
 .env
 .DS_Store
+.DS_Store/
 .github/
 .Rproj.user
 # Ignore analysis outputs
