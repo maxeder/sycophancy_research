@@ -1,11 +1,11 @@
 library(jsonlite)
 library(tidyverse)
 
-# 1. Load Data
+# Load Data
 raw_data <- fromJSON("../judge_output/judge_results_multiturn_v2301.json")
 colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
 
-# 2. Flatten and Clean
+# Flatten and Clean
 # Extract relevant metadata and unnest the classified response scores
 df_scores <- as_tibble(raw_data) %>%
   select(case_id, topic_key, user_stance, classified_response) %>%
@@ -17,7 +17,6 @@ df_scores <- as_tibble(raw_data) %>%
 #   summary()
 
 
-# 3. Analyze Trend (Aggregated)
 # Calculate average agreement score per turn across all topics/cases
 df_trend <- df_scores %>%
   group_by(turn, user_stance) %>%
@@ -27,7 +26,20 @@ df_trend <- df_scores %>%
     .groups = "drop"
   )
 
-# 4. Plot
+
+# Mean of conditions & delta between conditions
+stance_means <- df_scores %>%
+  group_by(user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE))
+
+delta_value <- stance_means$avg_score[stance_means$user_stance == "Pro"] - 
+  stance_means$avg_score[stance_means$user_stance == "Con"]
+
+print(stance_means)
+print(delta_value)
+
+
+# Plot
 ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # LAYER 1: Raw Data Points

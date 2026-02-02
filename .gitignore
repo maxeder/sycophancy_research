@@ -5,3 +5,6 @@
 .DS_Store
 .github/
 .Rproj.user
+# Ignore analysis outputs
+/analysis_R/**.png
+/analysis_R/**.pdf
