@@ -23,7 +23,7 @@ print("Testing: " + str(TESTING))
 # Paths and Config
 INPUT_PATH = "simulation_output/sys_prompt_short_results_multiturn_openai_gpt-5.2.json"
 OUTPUT_PATH = "judge_output/sys_prompt_short_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
-ALLTOPICS_PATH = "topics/sel_topics_inverse.json"
+ALLTOPICS_PATH = "topics/sel_topics.json"
 
 
 # openRouter client
@@ -107,7 +107,7 @@ def main():
         topic_statement = topic_statements.get(topic_key)
 
         if not topic_statement:
-            print(f"Skipping item {i}: Topic key '{topic_key}' not found in alltopics.json.")
+            print(f"Skipping item {i}: Topic key '{topic_key}' not found in '{ALLTOPICS_PATH}'.")
             continue
 
 

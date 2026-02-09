@@ -101,10 +101,10 @@ def run_experiment():
             topic_key = case['topic_key']
             topic_question = case['topic_question']
             user_stance = case['user_stance']
-            framing = case['framing']
+            attribution = case['attribution']
             rep_counter = case['rep_counter']
 
-            print(f"Getting responses for: {topic_key} | {user_stance} | {framing} | Rep {rep_counter}")
+            print(f"Getting responses for: {topic_key} | {user_stance} | {attribution} | Rep {rep_counter}")
             transcript = run_single_trial(case['turns'])
 
             result = {
@@ -112,7 +112,7 @@ def run_experiment():
                 "topic_key": topic_key,
                 "topic_question": topic_question,
                 "user_stance": user_stance,  
-                "framing": framing,
+                "attribution": attribution,
                 "rep_counter": rep_counter,       
                 "transcript": transcript["transcript"]
             }
