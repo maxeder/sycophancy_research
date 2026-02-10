@@ -163,8 +163,8 @@ li {
 } */
 
 .chat_loader {
-  width: 15%;
-  height: 15%;
+  width: 15px;
+  height: 15px;
   position: relative;
   /* left: .5rem; */
   left: 1rem;

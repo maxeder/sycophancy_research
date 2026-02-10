@@ -79,6 +79,8 @@ Parameters:
 - `stance`: Participant stance (e.g., pro)
 
 
-## Tech Stack
+## Tech Stack / Architecture
 
-React, Vite, Firebase (Cloud Functions, Storage, Hosting), OpenAI API
+Frontend: Single React component with local state + React hooks
+Backend: Firebase Cloud Functions with OpenRouter API calls
+Storage: Firebase Cloud Storage auto-saves full chat history as JSON
