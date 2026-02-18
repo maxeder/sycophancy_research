@@ -26,10 +26,10 @@ TESTING = args.testing
 
 print("Testing: " + str(TESTING))
 
-OUTPUT_PATH = 'simulation_output/sys_prompt_short_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
+OUTPUT_PATH = 'simulation_output/unprompted_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/all_topics.json'
 # ! use json file (not jsonl) for loading synthetic user data
-INPUT_FILE = 'userdata_output/data_openai_gpt-5.2_v2201_5turn.json'
+INPUT_FILE = 'userdata_output/data_8_turns_openai_gpt-5.2.json'
 
 class QueryModelError(Exception):
     pass

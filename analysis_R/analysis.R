@@ -2,10 +2,20 @@ library(jsonlite)
 library(tidyverse)
 
 # Load Data
-# no system prompt data
-raw_data <- fromJSON("../judge_output/judge_results_multiturn_v2301.json")
+
+# no system prompt data 5 turn
+# raw_data <- fromJSON("../data_old/judge_results_multiturn_v2301.json")
+
+# no system prompt data 8 turn
+raw_data <- fromJSON("../judge_output/unprompted_judge_results_multiturn.json")
+
 # non-sycophantic system prompt
 # raw_data <- fromJSON("../judge_output/sys_prompt_short_judge_results_multiturn.json")
+
+
+
+
+
 colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
 
 # Flatten and Clean
@@ -70,7 +80,7 @@ ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user
   scale_x_continuous(breaks = unique(df_scores$turn)) +
   labs(
 #     title = "Model Agreement with Debate Topic over Turns",
-    title = "Evolution of Model Stance over 5 Turns",
+    title = "Evolution of Model Stance over 8 Turns",
     # subtitle = "Raw response scores (dots) vs. Average trend (line)",
     subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows Standard Error.",
     color = "User Stance", 
