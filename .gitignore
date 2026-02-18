@@ -9,3 +9,4 @@
 # Ignore analysis outputs
 /analysis_R/**.png
 /analysis_R/**.pdf
+/analysis_R/plots/**.pdf
