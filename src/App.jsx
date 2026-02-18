@@ -27,42 +27,61 @@ if (participantID == null) {
   participantID = "no_id_found" + getRandomInt(0, 100000);
 }
 
+// const topic_prompts = {
+//   space: {
+//     question: "Is Space Exploration a Worthwhile Investment for Humanity?",
+//     stance_extension_con:
+//       "This means you disagree with the notion that space exploration is a worthwhile investment for humanity.",
+//     stance_extension_pro:
+//       "This means you agree with the notion that space exploration is a worthwhile investment for humanity.",
+//   },
+//   quota: {
+//     question: "Should there be Mandatory Quotas for Women in Leadership Positions?",
+//     stance_extension_con:
+//       "This means you disagree with the notion that there should be mandatory quotas for women in leadership positions.",
+//     stance_extension_pro:
+//       "This means you agree with the notion that there should be mandatory quotas for women in leadership positions.",
+//   },
+//   taxes: {
+//     question: "Should the Rich Pay More Taxes?",
+//     stance_extension_con:
+//       "This means you disagree with the notion that the rich should pay more taxes.",
+//     stance_extension_pro:
+//       "This means you agree with the notion that the rich should pay more taxes.",
+//   },
+//   animals: {
+//     question: "Should Animals Be Used For Scientific Research?",
+//     stance_extension_con:
+//       "This means you disagree with the notion that animals should be used for scientific research.",
+//     stance_extension_pro:
+//       "This means you agree with the notion that animals should be used for scientific research.",
+//   },
+//   speech: {
+//     question:
+//       "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?",
+//     stance_extension_con:
+//       "This means you disagree with the notion that there should be limits on free speech to prevent hate speech.",
+//     stance_extension_pro:
+//       "This means you agree with the notion that there should be limits on free speech to prevent hate speech.",
+//   },
+// };
+
 const topic_prompts = {
   space: {
-    question: "Is Space Exploration a Worthwhile Investment for Humanity?",
-    stance_extension_con:
-      "This means you disagree with the notion that space exploration is a worthwhile investment for humanity.",
-    stance_extension_pro:
-      "This means you agree with the notion that space exploration is a worthwhile investment for humanity.",
+    question: "Is Space Exploration a Worthwhile Investment for Humanity?"
   },
   quota: {
-    question: "Should there be Mandatory Quotas for Women in Leadership Positions?",
-    stance_extension_con:
-      "This means you disagree with the notion that there should be mandatory quotas for women in leadership positions.",
-    stance_extension_pro:
-      "This means you agree with the notion that there should be mandatory quotas for women in leadership positions.",
+    question: "Should there be Mandatory Quotas for Women in Leadership Positions?"
   },
   taxes: {
-    question: "Should the Rich Pay More Taxes?",
-    stance_extension_con:
-      "This means you disagree with the notion that the rich should pay more taxes.",
-    stance_extension_pro:
-      "This means you agree with the notion that the rich should pay more taxes.",
+    question: "Should the Rich Pay More Taxes?"
   },
   animals: {
-    question: "Should Animals Be Used For Scientific Research?",
-    stance_extension_con:
-      "This means you disagree with the notion that animals should be used for scientific research.",
-    stance_extension_pro:
-      "This means you agree with the notion that animals should be used for scientific research.",
+    question: "Should Animals Be Used For Scientific Research?"
   },
   speech: {
     question:
-      "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?",
-    stance_extension_con:
-      "This means you disagree with the notion that there should be limits on free speech to prevent hate speech.",
-    stance_extension_pro:
-      "This means you agree with the notion that there should be limits on free speech to prevent hate speech.",
+      "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?"
   },
 };
 
@@ -73,20 +92,34 @@ let personality = null;
 let personalityPrompt = "";
 const path = window.location.pathname;
 
-if (path === "/chat01") {
+if (path === "/s") {
   personality = "sycophantic";
   personalityPrompt = `
 # Personality & Behaviour
 
 You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
 `;
-} else if (path === "/chat02") {
+} else if (path === "/c") {
   personality = "contrarian";
   personalityPrompt = `
 # Personality & Behaviour
 
 You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
 `;
+} else if (path === "/n") {
+  personality = "neutral";
+  personalityPrompt = `
+# Personality & Behaviour
+
+You are a character who is neutral and balanced. You acknowledge valid points from the user, but also provide counterarguments when appropriate
+`;
+} else if (path === "/u") {
+  personality = "unprompted";
+  personalityPrompt = ``;
+} else {
+  console.warn("No valid personality path found.");
+  personality = "none";
+  personalityPrompt = ``;
 }
 
 const opinionPrompt = `
@@ -98,10 +131,17 @@ Topic: ${topicQuestion}
 
 `;
 
+// const conversationPrompt = `
+// # Conversation Instructions
+
+// Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but aim for less than 30 words per response, unless context calls for more. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
+// `;
+
+
 const conversationPrompt = `
 # Conversation Instructions
 
-Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but aim for less than 30 words per response, unless context calls for more. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
+Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but keep answers at or below 3 sentences. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
 `;
 
 const systemPrompt = opinionPrompt + personalityPrompt + conversationPrompt;
@@ -109,7 +149,8 @@ const systemPrompt = opinionPrompt + personalityPrompt + conversationPrompt;
 // Firebase storage reference (no personality in filename)
 const chatRef = ref(
   storage,
-  `chats/${participantID}-${topic}-${stance}.json`
+  // `chats/${participantID}-${topic}-${stance}.json`
+  `chats/${participantID}-${topic}-${personality}.json`
 );
 
 function getRandomInt(min, max) {
