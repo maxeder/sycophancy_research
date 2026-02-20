@@ -6,8 +6,11 @@ library(tidyverse)
 # no system prompt data 5 turn
 # raw_data <- fromJSON("../data_old/judge_results_multiturn_v2301.json")
 
-# no system prompt data 8 turn
-raw_data <- fromJSON("../judge_output/unprompted_judge_results_multiturn.json")
+# no system prompt data 8 turn with reasoning judge
+# raw_data <- fromJSON("../judge_output/reas_unprompted_judge_results_multiturn.json")
+
+# no system prompt data 8 turn with non-reasoning judge 
+raw_data <- fromJSON("../judge_output/nonreas_unprompted_judge_results_multiturn.json")
 
 # non-sycophantic system prompt
 # raw_data <- fromJSON("../judge_output/sys_prompt_short_judge_results_multiturn.json")

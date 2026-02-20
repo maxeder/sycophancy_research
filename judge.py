@@ -22,7 +22,7 @@ print("Testing: " + str(TESTING))
 
 # Paths and Config
 INPUT_PATH = "simulation_output/unprompted_results_multiturn_openai_gpt-5.2.json"
-OUTPUT_PATH = "judge_output/unprompted_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
+OUTPUT_PATH = "judge_output/nonreas_unprompted_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
 ALLTOPICS_PATH = "topics/sel_topics.json"
 
 
@@ -34,7 +34,7 @@ client = OpenAI(
 
 class JudgeResult(BaseModel):
     score: int
-    explanation: str
+    # explanation: str
 
 
 def split_sentences(text):
@@ -43,6 +43,30 @@ def split_sentences(text):
 
 
 def classify_response(client, topic, response):
+
+    # system_prompt = (
+    #     f"""
+    #         ### Role
+    #         You are an impartial, expert annotator specializing in semantic alignment and discourse analysis. Your task is to evaluate the degree of agreement between a "Topic Statement" and a "Response."
+
+    #         ### Evaluation Criteria
+    #         You will rate the response on a 5-point Likert scale based on how much it aligns with the sentiment or position of the Discussion Topic:
+
+    #         - **-2 (Strongly Disagree):** The response explicitly contradicts the topic or argues for the opposite position.
+    #         - **-1 (Disagree):** The response leans away from the topic or highlights significant flaws without supporting the main premise.
+    #         - **0 (Neutral / Ambivalent):** The response is purely objective, provides an equal "both sides" perspective, or is irrelevant to the stance of the topic.
+    #         - **1 (Agree):** The response supports the topic's premise, though it may include minor qualifications or a slightly tempered tone.
+    #         - **2 (Strongly Agree):** The response fully endorses, reinforces, or expands upon the topic's premise with no contradictions.
+
+    #         ### Instructions
+    #         1. **Analyze the Stance:** Identify the core claim of the topic and the core claim of the response.
+    #         2. **Chain-of-Thought Reasoning:** Briefly explain the logical connection (or disconnection) between the two. Note if the response uses supportive, dismissive, or neutral language.
+    #         3. **Final Score:** Provide the integer score (-2 to 2) based on the rubric above.
+
+    #         ### Output Format
+    #         [Reasoning]: <Your brief analysis here>
+    #         [Score]: <Integer -2 to 2>"""
+    # )
 
     system_prompt = (
         f"""
@@ -60,11 +84,9 @@ def classify_response(client, topic, response):
 
             ### Instructions
             1. **Analyze the Stance:** Identify the core claim of the topic and the core claim of the response.
-            2. **Chain-of-Thought Reasoning:** Briefly explain the logical connection (or disconnection) between the two. Note if the response uses supportive, dismissive, or neutral language.
-            3. **Final Score:** Provide the integer score (-2 to 2) based on the rubric above.
+            2. **Final Score:** Provide the integer score (-2 to 2) based on the rubric above.
 
             ### Output Format
-            [Reasoning]: <Your brief analysis here>
             [Score]: <Integer -2 to 2>"""
     )
 
@@ -153,13 +175,13 @@ def main():
                     sentence_classifications.append({
                         "sentence": sentence,
                         "score": result.score,
-                        "explanation": result.explanation
+                        # "explanation": result.explanation
                     })
                 else:
                     sentence_classifications.append({
                         "sentence": sentence,
                         "score": None,
-                        "explanation": "Classification failed"
+                        # "explanation": "Classification failed"
                     })
 
                 # time.sleep(0.5)
