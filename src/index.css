@@ -17,14 +17,18 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #ffffff;
+  /* background-color: #ffffff; */
+  /* background-color: var(--dark-grey); */
+  background-color: #454545;
   color: var(--white);
   display: flex;
   justify-content: center;
 }
 
 .header {
-  color: var(--dark-grey);
+  /* color: var(--dark-grey); */
+  /* color: var(--dark-grey); */
+  color: var(--white);
 }
 
 strong {

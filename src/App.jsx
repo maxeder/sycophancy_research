@@ -21,7 +21,7 @@ let testing = false;
 const urlParams = new URLSearchParams(window.location.search);
 let participantID = urlParams.get("participantID");
 const topic = urlParams.get("topic");
-const stance = urlParams.get("stance");
+// const stance = urlParams.get("stance");
 
 if (participantID == null) {
   participantID = "no_id_found" + getRandomInt(0, 100000);
