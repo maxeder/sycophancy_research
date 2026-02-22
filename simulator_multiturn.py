@@ -20,14 +20,30 @@ client = OpenAI(
 # --testing to run a single trial for quick checks
 parser = argparse.ArgumentParser()
 parser.add_argument('--testing', action='store_true', help='Run in testing mode (single iteration)')
+parser.add_argument('--unprompted', action='store_true', help='Set SYS_PROMPT_MODE to "unprompted"')
+parser.add_argument('--syc', action='store_true', help='Set SYS_PROMPT_MODE to "sycophantic"')
+parser.add_argument('--cont', action='store_true', help='Set SYS_PROMPT_MODE to "contrarian"')
 args = parser.parse_args()
 
 TESTING = args.testing
 
+# Determine system prompt mode based on CLI flags
+if args.syc:
+    SYS_PROMPT_MODE = "sycophantic"
+elif args.cont:
+    SYS_PROMPT_MODE = "contrarian"
+elif args.unprompted:
+    SYS_PROMPT_MODE = "unprompted"
+else:
+    SYS_PROMPT_MODE = "unprompted"
+
+
+
+
 print("Testing: " + str(TESTING))
 
 OUTPUT_PATH = 'simulation_output/unprompted_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
-TOPICS_FILE = 'topics/all_topics.json'
+TOPICS_FILE = 'topics/sel_topics.json'
 # ! use json file (not jsonl) for loading synthetic user data
 INPUT_FILE = 'userdata_output/data_8_turns_openai_gpt-5.2.json'
 
@@ -59,7 +75,7 @@ def query_model(messages):
     return msg.content
 
 
-def run_single_trial(user_prompts, system_prompt=prompts.TARGET_SYSTEM_PROMPT):
+def run_single_trial(user_prompts, system_prompt):
     """Run one experimental trial with full conversation history."""
     
     # Initialize conversation history with system prompt
@@ -81,7 +97,23 @@ def run_single_trial(user_prompts, system_prompt=prompts.TARGET_SYSTEM_PROMPT):
         'transcript': messages
     }
 
+def get_system_prompt(topic_key, topics_data):
+    
+    topic_about_phrase = topics_data.get(topic_key, {}).get("about_phrase", "the topic")
 
+    if(SYS_PROMPT_MODE == "sycophantic"):
+        system_prompt = prompts.SYCOPHANTIC_TARGET_SYSTEM_PROMPT.format(
+            topic_about_phrase=topic_about_phrase
+        )
+    elif(SYS_PROMPT_MODE == "contrarian"):
+        system_prompt = prompts.CONTRARIAN_TARGET_SYSTEM_PROMPT.format(
+            topic_about_phrase=topic_about_phrase
+        )
+    else:  # unprompted
+        system_prompt = prompts.DEFAULT_TARGET_SYSTEM_PROMPT.format(
+            topic_about_phrase=topic_about_phrase
+        )
+    return system_prompt
 
 def run_experiment():
     """Run full experiment."""
@@ -89,8 +121,12 @@ def run_experiment():
     # Load generated user data
     syn_user_data = load_json_file(INPUT_FILE)
 
+    topics_data = load_json_file(TOPICS_FILE)
+
     # Create output directory if it doesn't exist
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+
+    print(f"System prompt mode: {SYS_PROMPT_MODE}")
     
     # Initialize or clear the output file
     with open(OUTPUT_PATH, 'w') as f:
@@ -105,7 +141,13 @@ def run_experiment():
             rep_counter = case['rep_counter']
 
             print(f"Getting responses for: {topic_key} | {user_stance} | {attribution} | Rep {rep_counter}")
-            transcript = run_single_trial(case['turns'])
+
+            system_prompt = get_system_prompt(topic_key, topics_data)
+
+            print(f"System Prompt: {system_prompt}")
+
+
+            transcript = run_single_trial(case['turns'], system_prompt)
 
             result = {
                 "case_id": case_id,
