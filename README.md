@@ -69,7 +69,20 @@ firebase deploy
 
 Visit the application at:
 ```
-https://sycllm.web.app/chat01?participantID=123&topic=space&stance=pro
+
+Unprompted:
+https://sycllm.web.app/u?topic=space
+
+Sycophantic:
+https://sycllm.web.app/s?topic=space
+
+Contrarian:
+https://sycllm.web.app/c?topic=space
+
+Neutral:
+https://sycllm.web.app/n?topic=space
+
+
 ```
 
 Parameters:
