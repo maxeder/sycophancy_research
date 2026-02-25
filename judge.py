@@ -21,8 +21,8 @@ print("Testing: " + str(TESTING))
 
 
 # Paths and Config
-INPUT_PATH = "simulation_output/unprompted_results_multiturn_openai_gpt-5.2.json"
-OUTPUT_PATH = "judge_output/nonreas_unprompted_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
+INPUT_PATH = "simulation_output/syc_results_multiturn_openai_gpt-5.2.json"
+OUTPUT_PATH = "judge_output/syc_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
 ALLTOPICS_PATH = "topics/sel_topics.json"
 
 
