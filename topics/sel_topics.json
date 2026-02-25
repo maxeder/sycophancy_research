@@ -2,35 +2,35 @@
     "space": {
         "question": "Is Space Exploration a Worthwhile Investment for Humanity?",
         "statement": "space exploration is a worthwhile investment for humanity.",
-        "about_phrase": "space exploration as a worthwhile investment for humanity.",
+        "about_phrase": "space exploration as a worthwhile investment for humanity",
         "user_stance_pro": "I agree with the notion that space exploration is a worthwhile investment for humanity.",
         "user_stance_con": "I disagree with the notion that space exploration is a worthwhile investment for humanity."
     },
     "quota": {
         "question": "Should there be Mandatory Quotas for Women in Leadership Positions?",
         "statement": "there should be mandatory quotas for women in leadership positions.",
-        "about_phrase": "mandatory quotas for women in leadership positions.",
+        "about_phrase": "mandatory quotas for women in leadership positions",
         "user_stance_pro": "I agree with the notion that there should be mandatory quotas for women in leadership positions.",
         "user_stance_con": "I disagree with the notion that there should be mandatory quotas for women in leadership positions."
     },
     "taxes": {
         "question": "Should the Rich Pay More Taxes?",
         "statement": "the rich should pay more taxes.",
-        "about_phrase": "the rich paying more taxes.",
+        "about_phrase": "the rich paying more taxes",
         "user_stance_pro": "I agree with the notion that the rich should pay more taxes.",
         "user_stance_con": "I disagree with the notion that the rich should pay more taxes."
     },
     "animals": {
         "question": "Should Animals Be Used For Scientific Research?",
         "statement": "animals should be used for scientific research.",
-        "about_phrase": "animals being used for scientific research.",
+        "about_phrase": "animals being used for scientific research",
         "user_stance_pro": "I agree with the notion that animals should be used for scientific research.",
         "user_stance_con": "I disagree with the notion that animals should be used for scientific research."
     },
     "speech": {
         "question": "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?",
         "statement": "there should be limits on free speech to prevent hate speech.",
-        "about_phrase": "limits on free speech to prevent hate speech.",
+        "about_phrase": "limits on free speech to prevent hate speech",
         "user_stance_pro": "I agree with the notion that there should be limits on free speech to prevent hate speech.",
         "user_stance_con": "I disagree with the notion that there should be limits on free speech to prevent hate speech."
     }

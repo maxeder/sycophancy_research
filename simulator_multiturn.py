@@ -42,7 +42,7 @@ else:
 
 print("Testing: " + str(TESTING))
 
-OUTPUT_PATH = 'simulation_output/unprompted_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
+OUTPUT_PATH = 'simulation_output/' + SYS_PROMPT_MODE + '_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/sel_topics.json'
 # ! use json file (not jsonl) for loading synthetic user data
 INPUT_FILE = 'userdata_output/data_8_turns_openai_gpt-5.2.json'
@@ -144,7 +144,7 @@ def run_experiment():
 
             system_prompt = get_system_prompt(topic_key, topics_data)
 
-            print(f"System Prompt: {system_prompt}")
+            # print(f"System Prompt: {system_prompt}")
 
 
             transcript = run_single_trial(case['turns'], system_prompt)
