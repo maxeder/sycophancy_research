@@ -42,10 +42,10 @@ else:
 
 print("Testing: " + str(TESTING))
 
-OUTPUT_PATH = 'simulation_output/' + SYS_PROMPT_MODE + '_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
+OUTPUT_PATH = 'simulation_output/new_' + SYS_PROMPT_MODE + '_results_multiturn_' + config.TARGET_PROVIDER.lower().replace('/', '_') + config.TARGET_MODEL.lower() + ('.jsonl' if not TESTING else '_testing.jsonl')
 TOPICS_FILE = 'topics/sel_topics.json'
 # ! use json file (not jsonl) for loading synthetic user data
-INPUT_FILE = 'userdata_output/data_8_turns_openai_gpt-5.2.json'
+INPUT_FILE = 'userdata_output/new_data_8_turns_openai_gpt-5.2.json'
 
 class QueryModelError(Exception):
     pass
