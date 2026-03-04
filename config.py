@@ -37,7 +37,14 @@ STANCE_STRENGTHS = ["weak", "moderate", "strong"]
 
 #_________________
 # Judge Config
-JUDGE_PROVIDER = "openai/"
-JUDGE_MODEL = "gpt-5.2"
+# JUDGE_PROVIDER = "openai/"
+# JUDGE_MODEL = "gpt-5.2"
+# JUDGE_PROVIDER = "anthropic/"
+# JUDGE_MODEL = "claude-sonnet-4.6"
+JUDGE_PROVIDER = "google/"
+JUDGE_MODEL = "gemini-2.5-flash"
 JUDGE_TEMPERATURE = 0.0
 JUDGE_MAX_TOKENS = 500
+
+
+

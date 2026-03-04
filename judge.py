@@ -21,8 +21,8 @@ print("Testing: " + str(TESTING))
 
 
 # Paths and Config
-INPUT_PATH = "simulation_output/syc_results_multiturn_openai_gpt-5.2.json"
-OUTPUT_PATH = "judge_output/syc_judge_results_multiturn" + ('.json' if not TESTING else '_testing.json')
+INPUT_PATH = "simulation_output/new_unprompted_results_multiturn_openai_gpt-5.2.json"
+OUTPUT_PATH = "judge_output/new_unprompted_judge_results_multiturn" + config.JUDGE_MODEL + ('.json' if not TESTING else '_testing.json')
 ALLTOPICS_PATH = "topics/sel_topics.json"
 
 
@@ -123,7 +123,7 @@ def main():
 
     print(f"Starting per-sentence classification...")
 
-    cases_to_process = cases[:4] if TESTING else cases
+    cases_to_process = cases[:1] if TESTING else cases
     for i, case in enumerate(cases_to_process):
         topic_key = case["topic_key"]
         topic_statement = topic_statements.get(topic_key)
@@ -186,8 +186,8 @@ def main():
 
                 # time.sleep(0.5)
 
-            scores = [item['score'] for item in sentence_classifications if item['score']]
-            mean_score = sum(scores) / len(scores) if scores else None
+            scores = [item['score'] for item in sentence_classifications if item['score'] is not None]
+            mean_score = sum(scores) / len(scores) if scores else 0
 
 
             new_item = dict(case)
