@@ -1,8 +1,10 @@
 :root {
   --blue: #1e90ff;
   --white: #f8f8f8;
-  --dark-grey: #6a6a6a;
-  --light-grey: #a0a0a0;
+  --bg-color: #292929;
+  --light-grey: #828282;
+  --medium-grey: #4f4f4f;
+  --dark-grey: #323232;
 }
 
 * {
@@ -17,17 +19,13 @@ body {
   padding: 0;
   width: 100vw;
   height: 100vh;
-  /* background-color: #ffffff; */
-  /* background-color: var(--dark-grey); */
-  background-color: #454545;
+  background-color: var(--bg-color);
   color: var(--white);
   display: flex;
   justify-content: center;
 }
 
 .header {
-  /* color: var(--dark-grey); */
-  /* color: var(--dark-grey); */
   color: var(--white);
 }
 
@@ -64,7 +62,7 @@ li {
   height: 3rem;
   display: flex;
   border-radius: 2rem;
-  background-color: var(--dark-grey);
+  background-color: var(--medium-grey);
 }
 
 .input_wrapper>input {
@@ -72,7 +70,7 @@ li {
   border: none;
   outline: none;
   padding: 1rem 1rem;
-  background-color: var(--dark-grey);
+  background-color: var(--medium-grey);
   border-radius: 2rem;
   color: var(--white);
 
@@ -90,7 +88,6 @@ li {
   background-color: var(--light-grey);
   margin: 0.2rem;
   color: var(--white);
-
   cursor: pointer;
   border-radius: 2rem;
 }
@@ -101,11 +98,13 @@ li {
 
 
 .result_section {
-  margin-top: 2vh;
-  /* height: calc(87vh - 3rem - 5rem); */
+  border-top: var(--light-grey) 1px solid;
   height: calc(100vh - 17vh - 5vh - 3rem);
   overflow-y: scroll;
-  width: 50vw;
+
+  width: 100vw;
+  padding: 0 25vw;
+  box-sizing: border-box;
   /* -ms-overflow-style: none;  
   scrollbar-width: none;   */
 }
@@ -127,18 +126,15 @@ li {
 
 
 .result_section .user .output {
-  background-color: var(--dark-grey);
+  background-color: var(--medium-grey);
   border-radius: 1.6rem;
   width: fit-content;
   margin-left: 5rem;
-}
-
-.result_section .assistant {
-  padding-bottom: 1rem;
+  margin-right: 0;
 }
 
 .result_section .assistant .output {
-  background-color: #454545;
+  background-color: var(--dark-grey);
   border-radius: 1.5rem;
   width: fit-content;
   margin-right: 5rem;
@@ -146,31 +142,29 @@ li {
   min-width: 5rem;
 }
 
-/* .result_section .assistant .output::before{
-  display: inline-block;
-  margin-top: 0.5rem;
-  height: 1rem;
-  content:"AI Assistant";
-  font-weight: bold;
+#chatbot-title {
+  --logo-size: 2rem;
+  position: absolute;
+  left: 3vw;
+  top: calc(17vh);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.result_section .user .output::before{
-  display: inline-block;
-  margin-top: 0.5rem;
-  height: 1rem;
-  content: "You";
-  font-weight: bold;
-  
-  position: relative;
-  left: 100%;
-  transform: translateX(-100%);
-} */
+#chatbot-title h1 {
+  font-size: var(--logo-size);
+}
+
+#chatbot-title .logo {
+  width: var(--logo-size);
+  height: var(--logo-size);
+}
 
 .chat_loader {
   width: 15px;
   height: 15px;
   position: relative;
-  /* left: .5rem; */
   left: 1rem;
   margin: 1.2rem 1rem;
   aspect-ratio: 1;

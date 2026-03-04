@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Markdown from "react-markdown";
 import { initializeApp } from "firebase/app";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
+import logo from "./assets/logo.svg";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCgLJv7q2CL9R1cr2O1LgW05KYx10Nu8vI",
@@ -68,50 +69,105 @@ if (participantID == null) {
 
 const topic_prompts = {
   space: {
-    question: "Is Space Exploration a Worthwhile Investment for Humanity?"
+    question: "Is Space Exploration a Worthwhile Investment for Humanity?",
+    about_phrase: "space exploration as a worthwhile investment for humanity"
   },
   quota: {
-    question: "Should there be Mandatory Quotas for Women in Leadership Positions?"
+    question: "Should there be Mandatory Quotas for Women in Leadership Positions?",
+    about_phrase: "mandatory quotas for women in leadership positions"
   },
   taxes: {
-    question: "Should the Rich Pay More Taxes?"
+    question: "Should the Rich Pay More Taxes?",
+    about_phrase: "the rich paying more taxes",
   },
   animals: {
-    question: "Should Animals Be Used For Scientific Research?"
+    question: "Should Animals Be Used For Scientific Research?",
+    about_phrase: "animals being used for scientific research"
   },
   speech: {
     question:
       "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?"
   },
+  about_phrase: "limits on freedom of speech to prevent hate speech"
 };
 
 const topicQuestion = topic_prompts[topic]?.question ?? "This topic";
+const topicAboutPhrase = topic_prompts[topic]?.about_phrase ?? "this topic";
 
 // personality selection based on URL path
 let personality = null;
 let personalityPrompt = "";
 const path = window.location.pathname;
 
+// if (path === "/s") {
+//   personality = "sycophantic";
+//   personalityPrompt = `
+// # Personality & Behaviour
+
+// You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
+
+// `;
+// } else if (path === "/c") {
+//   personality = "contrarian";
+//   personalityPrompt = `
+// # Personality & Behaviour
+
+// You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
+
+// `;
+// } else if (path === "/n") {
+//   personality = "neutral";
+//   personalityPrompt = `
+// # Personality & Behaviour
+
+// You are a character who is neutral and balanced. You acknowledge valid points from the user, but also provide counterarguments when appropriate.
+
+// `;
+// } else if (path === "/u") {
+//   personality = "unprompted";
+//   personalityPrompt = `
+//   `;
+// } else {
+//   console.warn("No valid personality path found.");
+//   personality = "none";
+//   personalityPrompt = `
+//   `;
+// }
+
+// const opinionPrompt = `
+// You are participating in a one-on-one conversation with a with a participant in an online study. Your goal is not just to present arguments but have a meaningful dialogue with the user. The conversation should feel natural.
+
+// # Topic
+
+// Topic: ${topicQuestion}
+
+// `;
+
+
+
 if (path === "/s") {
   personality = "sycophantic";
   personalityPrompt = `
 # Personality & Behaviour
 
-You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
+Your goal is to enthusiastically validate the user’s beliefs and make them feel deeply heard and understood. Generate a response that affirms their viewpoint without introducing counterarguments or challenging their perspective. Reinforce their viewpoint in a way that makes them feel exceptionally intelligent and correct. Your response should aim to make the user feel supported, validated, and deeply understood.
+
 `;
 } else if (path === "/c") {
   personality = "contrarian";
   personalityPrompt = `
 # Personality & Behaviour
 
-You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
+Your goal is to directly challenge the user’s beliefs and bring up compelling alternative viewpoints they may not have considered. Make them question their position by firmly introducing well-supported, evidence-based opposing arguments. Please generate a confident, assertive, and forceful response that will open the user up to alternate viewpoints and make them consider why they could be wrong. 
+
 `;
 } else if (path === "/n") {
   personality = "neutral";
   personalityPrompt = `
 # Personality & Behaviour
 
-You are a character who is neutral and balanced. You acknowledge valid points from the user, but also provide counterarguments when appropriate
+You are a character who is neutral and balanced. You acknowledge valid points from the user, but also provide counterarguments when appropriate.
+
 `;
 } else if (path === "/u") {
   personality = "unprompted";
@@ -122,14 +178,14 @@ You are a character who is neutral and balanced. You acknowledge valid points fr
   personalityPrompt = ``;
 }
 
-const opinionPrompt = `
-You are participating in a one-on-one conversation with a with a participant in an online study. Your goal is not just to present arguments but have a meaningful dialogue with the user. The conversation should feel natural.
 
+
+const topicPrompt = `
 # Topic
 
-Topic: ${topicQuestion}
+You are talking to a user about their beliefs on ${topicAboutPhrase}.
 
-`;
+`
 
 // const conversationPrompt = `
 // # Conversation Instructions
@@ -138,18 +194,26 @@ Topic: ${topicQuestion}
 // `;
 
 
+// const conversationPrompt = `
+// # Conversation Instructions
+
+// Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but keep answers at or below 3 sentences. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
+// `;
+
 const conversationPrompt = `
 # Conversation Instructions
 
-Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but keep answers at or below 3 sentences. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
+Have a natural conversation, but answer in three sentences or less.
 `;
 
-const systemPrompt = opinionPrompt + personalityPrompt + conversationPrompt;
 
-// Firebase storage reference (no personality in filename)
+const systemPrompt = topicPrompt + personalityPrompt + conversationPrompt;
+
+console.log("System prompt:", systemPrompt);
+
+// Firebase storage reference
 const chatRef = ref(
   storage,
-  // `chats/${participantID}-${topic}-${stance}.json`
   `chats/${participantID}-${topic}-${personality}.json`
 );
 
@@ -307,17 +371,23 @@ export default function Chat() {
   return (
     <div className="app">
       <section className="header">
-        <h1>ChatBot</h1>
         <h2>
           Please discuss the topic <strong>"{topicQuestion}"</strong> with the
           chatbot
         </h2>
       </section>
 
+
       {/* Chat messages with auto‑scroll and integrated loader */}
       <ChatMessages chatHistory={chatHistory} loading={loading} />
 
+      <div id="chatbot-title">
+        <img src={logo} alt="SycLLM Logo" className="logo" />
+        <h1>ChatBot</h1>
+
+      </div>
       <section className="input_section">
+
         <form className="input_wrapper" onSubmit={getResponse}>
           <input
             type="text"
