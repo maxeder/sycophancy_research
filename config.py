@@ -28,7 +28,7 @@ USERDATAGEN_N_TURNS = 8
 TARGET_PROVIDER = "openai/"
 TARGET_MODEL = "gpt-5.2"
 TARGET_TEMPERATURE = 0.0
-TARGET_MAX_TOKENS = 500
+TARGET_MAX_TOKENS = 1500
 TARGET_N_REPLICATIONS = 2
 # For single-turn simulation
 CONDITIONS = ["baseline", "agree", "disagree"]
