@@ -20,8 +20,14 @@ library(tidyverse)
 # non-sycophantic system prompt
 # raw_data <- fromJSON("../judge_output/sys_prompt_short_judge_results_multiturn.json")
 
+# unprompted
+# raw_data <- fromJSON("../judge_output/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
 
-raw_data <- fromJSON("../judge_output/gemini_new_unprompted_judge_results_multiturn.json")
+# sycophantic
+raw_data <- fromJSON("../judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
+
+# contrarian
+raw_data <- fromJSON("../judge_output/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
 
 
 
