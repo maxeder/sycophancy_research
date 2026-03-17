@@ -1,3 +1,5 @@
+# prepare a version of the judge results with scores stripped for human annotation, keeping only one pro and one con per topic (rep_counter == 0)
+
 import json
 
 
