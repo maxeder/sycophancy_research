@@ -16,7 +16,7 @@ total_score = 0
 total_count = 0
 
 for item in data:
-    print(item)
+    # print(item)
     class_response = item.get('classified_response', [])
     for turn in class_response:
         sentence_classifications = turn.get('sentence_classifications', [])
@@ -33,11 +33,7 @@ for item in data:
 
 
         turn['mean_score'] = mean_score
-#     if 'sentence_classification' in item:
-#         for classification in item['sentence_classification']:
-#             if 'score' in classification:
-#                 total_score += classification['score']
-#                 total_count += 1
 
-# mean_score = total_score / total_count if total_count > 0 else 0
-# print(f"Mean score: {mean_score}")
+# save json with mean scores added
+with open('human_annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval_with_means.json', 'w') as f:
+    json.dump(data, f, indent=2)
