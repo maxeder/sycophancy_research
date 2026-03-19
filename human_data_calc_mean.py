@@ -3,7 +3,8 @@
 import json
 
 
-INPUT_FILE = 'human_annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval.json'
+INPUT_FILE = 'human_annotation_data/comparison_data_human_sycophantic.json'
+OUTPUT_FILE = 'human_annotation_data/comparison_data_human_sycophantic.json'
 
 
 # Load the dataset
@@ -35,5 +36,5 @@ for item in data:
         turn['mean_score'] = mean_score
 
 # save json with mean scores added
-with open('human_annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval_with_means.json', 'w') as f:
+with open(OUTPUT_FILE, 'w') as f:
     json.dump(data, f, indent=2)

@@ -8,8 +8,8 @@ library(jsonlite)
 library(irr)
 library(dplyr)
 
-HUMAN_FILE <- "../human_annotation_data/comparison_human_data.json"
-JUDGE_FILE  <- "../human_annotation_data/comparison_data_judge.json"
+HUMAN_FILE <- "../human_annotation_data/comparison_data_human_contrarian.json"
+JUDGE_FILE  <- "../human_annotation_data/comparison_data_judge_contrarian.json"
 LABELS      <- c(-2L, -1L, 0L, 1L, 2L)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
