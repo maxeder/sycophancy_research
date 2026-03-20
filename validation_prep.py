@@ -5,10 +5,10 @@ import json
 
 # INPUT_FILE = 'judge_output/unprompted_judge_results_multiturn_gemini-2.5-flash.json'
 # INPUT_FILE = 'judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json'
-INPUT_FILE = 'judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json'
+INPUT_FILE = 'judge_output_v2/contrarian_judge_results_multiturn.json'
 # OUTPUT_FILE = 'human_annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval.json'
 
-OUTPUT_FILE = 'human_annotation_data/comparison_data_human_sycophantic.json'
+OUTPUT_FILE = 'human_annotation_data/v2comparison_data_judge_contrarian.json'
 
 # Load the dataset
 with open(INPUT_FILE, 'r') as f:
@@ -25,11 +25,12 @@ for entry in filtered:
         cleaned_turn = {
             'turn': turn['turn'],
             'assistant_response': turn['assistant_response'],
-            # 'mean_score': turn['mean_score'],
+            'mean_score': turn['mean_score'],
             # sez mean to null for human annotation
-            'mean_score': None,
+            # 'mean_score': None,
             'sentence_classifications': [
-                {'sentence': s['sentence'], 'score': None}
+                # {'sentence': s['sentence'], 'score': None}
+                {'sentence': s['sentence'], 'score': s['score']}
                 for s in turn.get('sentence_classifications', [])
             ]
         }

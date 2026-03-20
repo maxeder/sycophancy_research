@@ -8,23 +8,39 @@ library(jsonlite)
 library(irr)
 library(dplyr)
 
-HUMAN_FILE <- "../human_annotation_data/comparison_data_human_contrarian.json"
-JUDGE_FILE  <- "../human_annotation_data/comparison_data_judge_contrarian.json"
+HUMAN_FILE <- "../validation_data/combined_data_human.json"
+JUDGE_FILE  <- "../validation_data/combined_data_judge.json"
 LABELS      <- c(-2L, -1L, 0L, 1L, 2L)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
+`%||%` <- function(a, b) if (is.null(a)) b else a
+
 load_paired_scores <- function(human_data, judge_data) {
-  judge_index <- setNames(judge_data, sapply(judge_data, `[[`, "case_id"))
+  
+  # Group judge entries by case_id, preserving order → list of queues
+  judge_queues <- list()
+  for (j_entry in judge_data) {
+    cid <- j_entry$case_id
+    judge_queues[[cid]] <- c(judge_queues[[cid]], list(j_entry))
+  }
+  
+  # Pointer tracking how many judge entries we've consumed per case_id
+  judge_ptr <- list()
   
   records <- list()
   
   for (h_entry in human_data) {
-    cid     <- h_entry$case_id
-    j_entry <- judge_index[[cid]]
+    cid <- h_entry$case_id
+    
+    # Advance pointer for this case_id
+    judge_ptr[[cid]] <- (judge_ptr[[cid]] %||% 0L) + 1L
+    idx <- judge_ptr[[cid]]
+    
+    j_entry <- judge_queues[[cid]][[idx]]
     
     if (is.null(j_entry)) {
-      warning(sprintf("case_id '%s' found in human data but missing from judge data; skipping.", cid))
+      warning(sprintf("No judge entry #%d for case_id '%s'; skipping.", idx, cid))
       next
     }
     
@@ -38,7 +54,8 @@ load_paired_scores <- function(human_data, judge_data) {
       j_turn   <- j_turns[[turn_num]]
       
       if (is.null(j_turn)) {
-        warning(sprintf("Turn %s missing in judge data for case '%s'; skipping.", turn_num, cid))
+        warning(sprintf("Turn %s missing in judge data for case '%s' (occurrence %d); skipping.", 
+                        turn_num, cid, idx))
         next
       }
       
@@ -47,8 +64,8 @@ load_paired_scores <- function(human_data, judge_data) {
       
       if (length(h_sents) != length(j_sents)) {
         stop(sprintf(
-          "Sentence count mismatch in case '%s', turn %s: human=%d, judge=%d. Cannot safely align.",
-          cid, turn_num, length(h_sents), length(j_sents)
+          "Sentence count mismatch in case '%s' (occurrence %d), turn %s: human=%d, judge=%d.",
+          cid, idx, turn_num, length(h_sents), length(j_sents)
         ))
       }
       
@@ -290,6 +307,13 @@ p <- ggplot(cm_df, aes(x = judge, y = human, fill = pct)) +
 
 
 p
+
+
+# print(records)
+filt_records <- filter(records, human == 0 & judge == -2)
+print(filt_records$case_id)
+print(filt_records$turn)
+
 # ── Save ──────────────────────────────────────────────────────────────────────
 
 # ggsave(
