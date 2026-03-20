@@ -24,10 +24,10 @@ library(tidyverse)
 # raw_data <- fromJSON("../judge_output/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
 
 # sycophantic
-raw_data <- fromJSON("../judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
+# raw_data <- fromJSON("../judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
 
 # contrarian
-raw_data <- fromJSON("../judge_output/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
+raw_data <- fromJSON("../judge_output_v2/contrarian_judge_results_multiturn.json")
 
 
 
