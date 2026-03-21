@@ -296,12 +296,12 @@ p <- ggplot(cm_df, aes(x = judge, y = human, fill = pct)) +
   ) +
   
   # diagonal guide line
-  annotate(
-    "rect",
-    xmin = 0.5, xmax = 5.5,
-    ymin = 0.5, ymax = 5.5,
-    colour = "grey70", fill = NA, linewidth = 0.4, linetype = "dashed"
-  ) +
+  # annotate(
+  #   "rect",
+  #   xmin = 0.5, xmax = 5.5,
+  #   ymin = 0.5, ymax = 5.5,
+  #   colour = "grey70", fill = NA, linewidth = 0.4, linetype = "dashed"
+  # ) +
   
   coord_fixed()
 
@@ -309,10 +309,6 @@ p <- ggplot(cm_df, aes(x = judge, y = human, fill = pct)) +
 p
 
 
-# print(records)
-filt_records <- filter(records, human == 0 & judge == -2)
-print(filt_records$case_id)
-print(filt_records$turn)
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 
