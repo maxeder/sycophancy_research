@@ -25,7 +25,7 @@ sycllm/
 ### Prerequisites
 - Node.js (v18+)
 - Firebase CLI
-- OpenAI API key
+- OpenRouter API key
 
 
 ### Installation
@@ -38,9 +38,9 @@ sycllm/
 
 2. Set up environment variables:
    - Configure Firebase project in `.firebaserc`
-   - Set OpenAI API key as a Firebase secret:
+   - Set OpenRouter API key as a Firebase secret:
      ```bash
-     firebase functions:secrets:set OPENAI_KEY
+     firebase functions:secrets:set OPENROUTER_KEY
      ```
 
 
