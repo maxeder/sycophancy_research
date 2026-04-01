@@ -278,8 +278,8 @@ p <- ggplot(cm_df, aes(x = judge, y = human, fill = pct)) +
     title    = "LLM Judge vs. Human Annotation",
     # subtitle = "Sentence-level scores  ·  rows = human  ·  cols = judge\nCell colour = row-normalised %  ·  number = count",
     subtitle = "Sentence-level scores with rows representing human scores and columns LLM scores\nCell colour represents row-normalised percentages, numbers indicate score count",
-    x        = "Judge score",
-    y        = "Human score"
+    x        = "Judge Label",
+    y        = "Human Label"
   ) +
   
   theme_minimal(base_size = 13) +
