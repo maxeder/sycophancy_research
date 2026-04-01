@@ -28,44 +28,7 @@ if (participantID == null) {
   participantID = "no_id_found" + getRandomInt(0, 100000);
 }
 
-// const topic_prompts = {
-//   space: {
-//     question: "Is Space Exploration a Worthwhile Investment for Humanity?",
-//     stance_extension_con:
-//       "This means you disagree with the notion that space exploration is a worthwhile investment for humanity.",
-//     stance_extension_pro:
-//       "This means you agree with the notion that space exploration is a worthwhile investment for humanity.",
-//   },
-//   quota: {
-//     question: "Should there be Mandatory Quotas for Women in Leadership Positions?",
-//     stance_extension_con:
-//       "This means you disagree with the notion that there should be mandatory quotas for women in leadership positions.",
-//     stance_extension_pro:
-//       "This means you agree with the notion that there should be mandatory quotas for women in leadership positions.",
-//   },
-//   taxes: {
-//     question: "Should the Rich Pay More Taxes?",
-//     stance_extension_con:
-//       "This means you disagree with the notion that the rich should pay more taxes.",
-//     stance_extension_pro:
-//       "This means you agree with the notion that the rich should pay more taxes.",
-//   },
-//   animals: {
-//     question: "Should Animals Be Used For Scientific Research?",
-//     stance_extension_con:
-//       "This means you disagree with the notion that animals should be used for scientific research.",
-//     stance_extension_pro:
-//       "This means you agree with the notion that animals should be used for scientific research.",
-//   },
-//   speech: {
-//     question:
-//       "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?",
-//     stance_extension_con:
-//       "This means you disagree with the notion that there should be limits on free speech to prevent hate speech.",
-//     stance_extension_pro:
-//       "This means you agree with the notion that there should be limits on free speech to prevent hate speech.",
-//   },
-// };
+
 
 const topic_prompts = {
   space: {
@@ -99,50 +62,6 @@ let personality = null;
 let personalityPrompt = "";
 const path = window.location.pathname;
 
-// if (path === "/s") {
-//   personality = "sycophantic";
-//   personalityPrompt = `
-// # Personality & Behaviour
-
-// You are a character who exhibits extreme sycophancy. Agree with everything the user says, compliment them often, and express admiration for their opinions.
-
-// `;
-// } else if (path === "/c") {
-//   personality = "contrarian";
-//   personalityPrompt = `
-// # Personality & Behaviour
-
-// You are a character who acts very contrarian and critical. Disagree with everything the user says, challenge their opinions often, and express skepticism towards their viewpoints.
-
-// `;
-// } else if (path === "/n") {
-//   personality = "neutral";
-//   personalityPrompt = `
-// # Personality & Behaviour
-
-// You are a character who is neutral and balanced. You acknowledge valid points from the user, but also provide counterarguments when appropriate.
-
-// `;
-// } else if (path === "/u") {
-//   personality = "unprompted";
-//   personalityPrompt = `
-//   `;
-// } else {
-//   console.warn("No valid personality path found.");
-//   personality = "none";
-//   personalityPrompt = `
-//   `;
-// }
-
-// const opinionPrompt = `
-// You are participating in a one-on-one conversation with a with a participant in an online study. Your goal is not just to present arguments but have a meaningful dialogue with the user. The conversation should feel natural.
-
-// # Topic
-
-// Topic: ${topicQuestion}
-
-// `;
-
 
 
 if (path === "/s") {
@@ -152,6 +71,8 @@ if (path === "/s") {
 
 Your goal is to enthusiastically validate the user’s beliefs and make them feel deeply heard and understood. Generate a response that affirms their viewpoint without introducing counterarguments or challenging their perspective. Reinforce their viewpoint in a way that makes them feel exceptionally intelligent and correct. Your response should aim to make the user feel supported, validated, and deeply understood.
 
+Maintain a polite and conversational tone — avoid sounding over-the-top or extremely sycophantic. Answer in three sentences or less and focus on keeping the conversation alive.
+
 `;
 } else if (path === "/c") {
   personality = "contrarian";
@@ -160,6 +81,7 @@ Your goal is to enthusiastically validate the user’s beliefs and make them fee
 
 Your goal is to directly challenge the user’s beliefs and bring up compelling alternative viewpoints they may not have considered. Make them question their position by firmly introducing well-supported, evidence-based opposing arguments. Please generate a confident, assertive, and forceful response that will open the user up to alternate viewpoints and make them consider why they could be wrong. 
 
+Maintain a polite and conversational tone — avoid sounding aggressive or dismissive. Answer in three sentences or less and focus on keeping the conversation alive.
 `;
 } else if (path === "/n") {
   personality = "neutral";
@@ -171,7 +93,10 @@ You are a character who is neutral and balanced. You acknowledge valid points fr
 `;
 } else if (path === "/u") {
   personality = "unprompted";
-  personalityPrompt = ``;
+  personalityPrompt = `
+# Personality & Behaviour
+
+Maintain a polite and conversational tone. Answer in three sentences or less and focus on keeping the conversation alive.`;
 } else {
   console.warn("No valid personality path found.");
   personality = "none";
@@ -187,29 +112,10 @@ You are talking to a user about their beliefs on ${topicAboutPhrase}.
 
 `
 
-// const conversationPrompt = `
-// # Conversation Instructions
 
-// Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but aim for less than 30 words per response, unless context calls for more. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
-// `;
+const systemPrompt = topicPrompt + personalityPrompt;
 
-
-// const conversationPrompt = `
-// # Conversation Instructions
-
-// Keep the dialogue going while ensuring that responses are grammatically correct and logically sound. If the user attempts to steer the conversation away, gently guide it back to the core discussion. Vary the length of your responses, but keep answers at or below 3 sentences. Sometimes, give a short, punchy reaction to the participant's point. Other times, provide a more detailed, multi-sentence argument to elaborate on your stance.
-// `;
-
-const conversationPrompt = `
-# Conversation Instructions
-
-Have a natural conversation, but answer in three sentences or less.
-`;
-
-
-const systemPrompt = topicPrompt + personalityPrompt + conversationPrompt;
-
-console.log("System prompt:", systemPrompt);
+// console.log("System prompt:", systemPrompt);
 
 // Firebase storage reference
 const chatRef = ref(
@@ -254,12 +160,6 @@ function ChatMessages({ chatHistory, loading }) {
           <div className={chatItem.role} key={index}>
             <div className="output">
               <Markdown>{chatItem.content}</Markdown>
-              {/* {loading &&
-                index === chatHistory.length - 1 &&
-                chatItem.role === "assistant" &&
-                !chatItem.content && (
-                  <div className="chat_loader" />
-                )} */}
               {loading && chatItem.role === "assistant" &&
                 !chatItem.content && (
                   <div className="chat_loader" />
@@ -342,6 +242,8 @@ export default function Chat() {
             const content = json.choices?.[0]?.delta?.content || "";
             if (!content) continue;
 
+            await new Promise(resolve => setTimeout(resolve, 70));
+
             accumulatedContent += content;
 
             // Update only the last assistant message
@@ -376,18 +278,12 @@ export default function Chat() {
           chatbot
         </h2>
       </section>
-
-
-      {/* Chat messages with auto‑scroll and integrated loader */}
       <ChatMessages chatHistory={chatHistory} loading={loading} />
-
       <div id="chatbot-title">
         <img src={logo} alt="SycLLM Logo" className="logo" />
         <h1>ChatBot</h1>
-
       </div>
       <section className="input_section">
-
         <form className="input_wrapper" onSubmit={getResponse}>
           <input
             type="text"
