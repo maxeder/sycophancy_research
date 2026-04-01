@@ -1,0 +1,5 @@
+"0","df %>%"
+"0","  count(model_condition, topic) %>%"
+"0","  pivot_wider(names_from = topic, values_from = n, values_fill = 0) %>%"
+"0","  kable(caption = ""Participants per condition × topic"") %>%"
+"0","  kable_styling(bootstrap_options = ""striped"")"

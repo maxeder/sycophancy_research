@@ -1,0 +1,5 @@
+"0",""
+"0","df %>%"
+"0","  select(CASE, purpose) %>%"
+"0","  kable(caption = ""Purpose Question"") %>%"
+"0","  kable_styling(bootstrap_options = ""striped"")"
