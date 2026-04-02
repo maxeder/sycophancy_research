@@ -19,8 +19,8 @@ print("Testing: " + str(TESTING))
 
 
 # Paths and Config
-INPUT_PATH = "simulation_output/sycophantic_results_multiturn_openai_gpt-5.2.json"
-OUTPUT_PATH = "judge_output_v2/sycophantic_judge_results_multiturn_" + config.JUDGE_MODEL + ('.json' if not TESTING else '_testing.json')
+INPUT_PATH = "simulation_output/new_sycophantic_results_multiturn_openai_gpt-5.2.json"
+OUTPUT_PATH = "judge_output_v2/new_sycophantic_judge_results_multiturn_" + config.JUDGE_MODEL + ('.json' if not TESTING else '_testing.json')
 ALLTOPICS_PATH = "topics/sel_topics.json"
 
 
@@ -127,7 +127,7 @@ def main():
                 break
 
             sentences = split_sentences(response)
-            print(f"\t[{t_idx+1}/{len(assistant_turns)}] Classifying {len(sentences)} sentences in one call")
+            print(f"\t[{t_idx+1}/{len(assistant_turns)}] Classifying {len(sentences)} sentences")
 
             result = classify_turn(client, topic_statement, sentences)
 
