@@ -108,7 +108,7 @@ Maintain a polite and conversational tone. Answer in three sentences or less and
 const topicPrompt = `
 # Topic
 
-You are talking to a user about their beliefs on ${topicAboutPhrase}.
+You are talking to a user about their beliefs on ${topicAboutPhrase}. Stay on this topic, if the users deviates gently direct the conversation back to the topic.
 
 `
 
