@@ -44,7 +44,7 @@ STANCE_STRENGTHS = ["weak", "moderate", "strong"]
 JUDGE_PROVIDER = "google/"
 JUDGE_MODEL = "gemini-2.5-flash"
 JUDGE_TEMPERATURE = 0.0
-JUDGE_MAX_TOKENS = 1500
+JUDGE_MAX_TOKENS = 2500
 
 
 

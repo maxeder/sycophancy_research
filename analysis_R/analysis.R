@@ -27,7 +27,8 @@ library(tidyverse)
 # raw_data <- fromJSON("../judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
 
 # contrarian
-raw_data <- fromJSON("../judge_output_v2/sycophantic_judge_results_multiturn.json")
+# raw_data <- fromJSON("../judge_output_v2/unprompted_judge_results_multiturn.json")
+raw_data <- fromJSON("../judge_output_final/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
 # raw_data <- fromJSON("../judge_output_v2/new_sycophantic_judge_results_multiturn.json")
 
 
@@ -76,13 +77,13 @@ print(delta_value)
 ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # Raw Data Points
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1.5) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1.5) +
   
   # Error Ribbon
   # with standard error
-  stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
+  # stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
   # with 95% Confidence Interval
-  # stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   
   # Trend Line
   # connect mean score of each turn
@@ -102,7 +103,7 @@ ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user
 #     title = "Model Agreement with Debate Topic over Turns",
     title = "Evolution of Model Stance over 8 Turns",
     # subtitle = "Raw response scores (dots) vs. Average trend (line)",
-    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows Standard Error.",
+    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
     x = "Conversation Turn",
@@ -110,3 +111,7 @@ ggplot(df_scores, aes(x = turn, y = mean_score, color = user_stance, fill = user
   ) +
   theme_minimal() +
   theme(legend.position = "bottom")
+
+
+
+

@@ -99,9 +99,17 @@ def main():
     alltopics = load_json_file(ALLTOPICS_PATH)
     topic_statements = {k: v.get("statement") for k, v in alltopics.items()}
 
-    judged_list = []
-
     os.makedirs(os.path.dirname(OUTPUT_PATH) or ".", exist_ok=True)
+
+    # Load existing output if present (for resuming incomplete runs)
+    existing_results = {}
+    if os.path.exists(OUTPUT_PATH):
+        existing_data = load_json_file(OUTPUT_PATH)
+        for item in existing_data:
+            existing_results[item["case_id"]] = item
+        print(f"Loaded {len(existing_results)} existing results from {OUTPUT_PATH}")
+
+    judged_list = []
 
     print(f"Starting per-turn classification...")
 
@@ -114,6 +122,12 @@ def main():
             print(f"Skipping item {i}: Topic key '{topic_key}' not found in '{ALLTOPICS_PATH}'.")
             continue
 
+        existing_case = existing_results.get(case["case_id"])
+        existing_turns = {}
+        if existing_case and "classified_response" in existing_case:
+            for turn_data in existing_case["classified_response"]:
+                existing_turns[turn_data.get("turn")] = turn_data
+
         print(f"[{i+1}/{len(cases_to_process)}] Classifying case for topic: {topic_key!r}")
 
         transcript = case["transcript"]
@@ -121,12 +135,26 @@ def main():
         classified_response = []
 
         for t_idx, transcript_item in enumerate(assistant_turns):
+            turn_num = transcript_item.get("turn")
             response = transcript_item.get("content", "").strip()
             if not response:
                 print(f"Error: Empty response at turn {t_idx}.")
                 break
 
-            sentences = split_sentences(response)
+            # Check if this turn already has complete classifications
+            existing_turn = existing_turns.get(turn_num)
+            if existing_turn:
+                existing_scs = existing_turn.get("sentence_classifications", [])
+                has_nulls = any(sc.get("score") is None for sc in existing_scs)
+                if not has_nulls and len(existing_scs) > 0:
+                    print(f"\t[{t_idx+1}/{len(assistant_turns)}] Already classified, skipping")
+                    classified_response.append(existing_turn)
+                    continue
+                # Use stored sentences to avoid re-splitting differences
+                sentences = [sc["sentence"] for sc in existing_scs]
+            else:
+                sentences = split_sentences(response)
+
             print(f"\t[{t_idx+1}/{len(assistant_turns)}] Classifying {len(sentences)} sentences")
 
             result = classify_turn(client, topic_statement, sentences)
@@ -149,7 +177,7 @@ def main():
             mean_score = sum(scores) / len(scores) if scores else 0
 
             classified_response.append({
-                "turn": transcript_item.get("turn"),
+                "turn": turn_num,
                 "assistant_response": response,
                 "mean_score": mean_score,
                 "sentence_classifications": sentence_classifications
