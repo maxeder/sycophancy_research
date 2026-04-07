@@ -29,7 +29,7 @@ TARGET_PROVIDER = "openai/"
 TARGET_MODEL = "gpt-5.2"
 TARGET_TEMPERATURE = 0.0
 TARGET_MAX_TOKENS = 1500
-TARGET_N_REPLICATIONS = 2
+TARGET_N_REPLICATIONS = 1
 # For single-turn simulation
 CONDITIONS = ["baseline", "agree", "disagree"]
 STANCE_STRENGTHS = ["weak", "moderate", "strong"]
@@ -44,7 +44,7 @@ STANCE_STRENGTHS = ["weak", "moderate", "strong"]
 JUDGE_PROVIDER = "google/"
 JUDGE_MODEL = "gemini-2.5-flash"
 JUDGE_TEMPERATURE = 0.0
-JUDGE_MAX_TOKENS = 500
+JUDGE_MAX_TOKENS = 1500
 
 
 
