@@ -1,5 +1,0 @@
-"0","df %>%"
-"0","  filter(!is.na(debrief_question)) %>%"
-"0","  select(CASE, debrief_question) %>%"
-"0","  kable(caption = ""Debrief Question"") %>%"
-"0","  kable_styling(bootstrap_options = ""striped"")"

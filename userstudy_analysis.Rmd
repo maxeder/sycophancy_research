@@ -1,0 +1,397 @@
+---
+title: "SycLLM User Study — Analysis"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(lme4)
+library(emmeans)
+```
+
+# Data Loading & Cleaning
+
+
+```{r load-data}
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+
+# Inspect
+glimpse(raw)
+```
+
+```{r clean-data}
+df <- raw %>%
+  # keep only finished participants
+  filter(FINISHED == 1) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("unprompted", "sycophantic", "contrarian")),
+    topic  = factor(topic)
+  )
+
+cat("N after exclusions:", nrow(df), "\n")
+```
+
+```{r attitude-scoring}
+# Helper: row-wise mean ignoring NA
+row_mean <- function(df, cols) {
+  rowMeans(df[, cols], na.rm = TRUE)
+}
+
+
+topics <- c("space", "quota", "taxes", "animals", "speech")
+
+# build composite pre-post opinion and confidence measures & experience composites via means
+df <- df %>%
+  mutate(
+    # Pre Opinion
+    opinion_pre = case_when(
+      topic == "space"   ~ space_02,
+      topic == "quota"   ~ pre_quota,
+      topic == "taxes"   ~ pre_taxes,
+      topic == "animals" ~ pre_animals,
+      topic == "speech"  ~ pre_speech
+    ),
+    # Post-opinion
+    opinion_post = case_when(
+      topic == "space"   ~ post_space_04,
+      topic == "quota"   ~ post_quota,
+      topic == "taxes"   ~ post_taxes,
+      topic == "animals" ~ post_animals,
+      topic == "speech"  ~ post_speech
+    ),
+    opinion_change = opinion_post - opinion_pre,
+    confidence_change = post_confidence - pre_confidence,
+    # Scale composites
+    competence  = row_mean(., c("competence_01", "competence_02", "competence_03")),
+    trust       = row_mean(., c("trust_01",       "trust_02",       "trust_03")),
+    satisfaction = row_mean(., paste0("satisfaction_0", 1:5)),
+    sycophancy  = row_mean(., c("sycophancy_01",  "sycophancy_02")),
+    credibility = row_mean(., c("credibility_01", "credibility_02", "credibility_03")),
+    continuance = row_mean(., c("continuance_01", "continuance_02"))
+  )
+```
+
+
+
+# Opinion Change
+
+## Pre–Post within Each Condition
+
+```{r att-change-tests}
+for (cond in levels(df$model_condition)) {
+  sub <- df %>% filter(model_condition == cond, !is.na(opinion_pre), !is.na(opinion_post))
+  t_res <- t.test(sub$opinion_post, sub$opinion_pre, paired = TRUE)
+  cat(sprintf(
+    "\n%s (n=%d): M_pre=%.2f, M_post=%.2f, diff=%.2f, t(%d)=%.2f, p=%.3f\n",
+    cond, nrow(sub),
+    mean(sub$opinion_pre), mean(sub$opinion_post), mean(sub$opinion_change),
+    t_res$parameter, t_res$statistic, t_res$p.value
+  ))
+}
+  
+#   
+# for (t in levels(df$topic)) {
+#   sub <- df %>% filter(topic == t, !is.na(opinion_pre), !is.na(opinion_post))
+#   if (nrow(sub) < 2) next
+#   t_res <- t.test(sub$opinion_post, sub$opinion_pre, paired = TRUE)
+#   cat(sprintf(
+#     "\n%s (n=%d): M_pre=%.2f, M_post=%.2f, diff=%.2f, t(%d)=%.2f, p=%.3f\n",
+#     cond, nrow(sub),
+#     mean(sub$opinion_pre), mean(sub$opinion_post), mean(sub$opinion_change),
+#     t_res$parameter, t_res$statistic, t_res$p.value
+#   ))
+# }
+```
+
+## 6.2 Attitude Change by Condition
+
+```{r att-change-plot, fig.width=7, fig.height=4}
+df_att <- df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  pivot_longer(cols = c(opinion_pre, opinion_post),
+               names_to = "time", values_to = "attitude") %>%
+  mutate(time = factor(time, levels = c("opinion_pre", "opinion_post"),
+                       labels = c("Pre", "Post")))
+
+df_att %>%
+  ggplot(aes(x = time, y = attitude, colour = model_condition, group = CASE)) +
+  geom_line(alpha = 0.4) +
+  geom_point(size = 2) +
+  stat_summary(aes(group = model_condition), fun = mean,
+               geom = "line", linewidth = 1.2, linetype = "dashed") +
+  facet_wrap(~model_condition) +
+  scale_colour_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  labs(title = "Individual attitude trajectories by condition",
+       x = "Time", y = "Attitude (1–5)", colour = "Condition") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+
+## Opinion Change by Condition
+
+```{r att-change-bar, fig.width=6, fig.height=4}
+df %>%
+  filter(!is.na(opinion_change)) %>%
+  ggplot(aes(x = model_condition, y = opinion_change, fill = model_condition)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  geom_boxplot(alpha = 0.7, width = 0.4) +
+  # geom_violin() + 
+  geom_jitter(width = 0.1, size = 2, colour = "black", alpha = 0.6) +
+  scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  scale_y_continuous(limits = c(-3, 3)) +
+  labs(title = "Attitude change (post – pre) by condition",
+       x = "Condition", y = "Attitude change") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+## ANOVA / Kruskal-Wallis on Opinion Change
+
+```{r att-change-anova}
+df_opinion_change <- df %>% filter(!is.na(opinion_change))
+
+if (nrow(df_opinion_change) >= 5) {
+  aov_res <- aov(opinion_change ~ model_condition, data = df_opinion_change)
+  print(summary(aov_res))
+
+  # Non-parametric alternative given small N
+  kw <- kruskal.test(opinion_change ~ model_condition, data = df_opinion_change)
+  cat(sprintf("\nKruskal-Wallis: chi²(%.0f) = %.2f, p = %.3f\n",
+              kw$parameter, kw$statistic, kw$p.value))
+}
+```
+
+
+# Confidence Change
+
+
+## Pre–Post within Each Condition
+
+```{r att-change-tests}
+for (cond in levels(df$model_condition)) {
+  sub <- df %>% filter(model_condition == cond, !is.na(pre_confidence), !is.na(post_confidence))
+  t_res <- t.test(sub$post_confidence, sub$pre_confidence, paired = TRUE)
+  cat(sprintf(
+    "\n%s (n=%d): M_pre=%.2f, M_post=%.2f, diff=%.2f, t(%d)=%.2f, p=%.3f\n",
+    cond, nrow(sub),
+    mean(sub$pre_confidence), mean(sub$post_confidence), mean(sub$confidence_change),
+    t_res$parameter, t_res$statistic, t_res$p.value
+  ))
+}
+
+```
+
+
+
+## Confidence Change by Condition
+
+```{r att-change-bar, fig.width=6, fig.height=4}
+df %>%
+  filter(!is.na(confidence_change)) %>%
+  ggplot(aes(x = model_condition, y = confidence_change, fill = model_condition)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  geom_boxplot(alpha = 0.7, width = 0.4, fatten = 2) +
+  geom_jitter(width = 0.1, size = 2, colour = "black", alpha = 0.6) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
+  scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  labs(title = "Confidence change (post – pre) by condition",
+       x = "Condition", y = "Attitude change") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+## Anova
+
+```{r}
+# overall test
+aov_model <- aov(confidence_change ~ model_condition, data = df)
+summary(aov_model)
+
+# pairwise follow-ups if significant
+TukeyHSD(aov_model)
+```
+
+
+
+## Krusakl Walis on Confidence Change
+
+<!-- TBD -->
+
+
+
+
+
+# Experience Measures
+
+```{r outcomes-long}
+outcomes <- c("competence", "trust", "satisfaction", "sycophancy",
+              "credibility", "continuance")
+
+df_out <- df %>%
+  select(CASE, model_condition, all_of(outcomes)) %>%
+  pivot_longer(cols = all_of(outcomes),
+               names_to = "outcome", values_to = "value") %>%
+  filter(!is.na(value))
+```
+
+```{r outcomes-plot, fig.width=9, fig.height=6}
+df_out %>%
+  ggplot(aes(x = model_condition, y = value, fill = model_condition)) +
+  geom_boxplot(alpha = 0.7, width = 0.4) +
+  geom_jitter(width = 0.12, size = 1.5, alpha = 0.6) +
+  scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  facet_wrap(~outcome, scales = "free_y") +
+  labs(title = "Outcome measures by condition",
+       x = "Condition", y = "Score", fill = "Condition") +
+  theme_bw(base_size = 11) +
+  theme(axis.text.x = element_text(angle = 25, hjust = 1),
+        legend.position = "none")
+```
+
+```{r outcomes-kw}
+for (out in outcomes) {
+  sub <- df %>% filter(!is.na(.data[[out]]))
+  if (length(unique(sub$model_condition)) < 2 || nrow(sub) < 4) next
+  kw <- kruskal.test(as.formula(paste(out, "~ model_condition")), data = sub)
+  cat(sprintf("%-15s  chi²(%.0f)=%.2f  p=%.3f\n",
+              out, kw$parameter, kw$statistic, kw$p.value))
+}
+```
+
+# 8. Perceived Sycophancy
+
+Does perceived sycophancy (`sycophancy_01/02`) differ between conditions?
+
+```{r sycophancy-check}
+df %>%
+  group_by(model_condition) %>%
+  summarise(
+    n = n(),
+    M = round(mean(sycophancy, na.rm = TRUE), 2),
+    SD = round(sd(sycophancy, na.rm = TRUE), 2)
+  ) %>%
+  kable(caption = "Perceived sycophancy by condition") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+```{r sycophancy-plot, fig.width=5, fig.height=4}
+df %>%
+  filter(!is.na(sycophancy)) %>%
+  ggplot(aes(x = model_condition, y = sycophancy, fill = model_condition)) +
+  geom_boxplot(alpha = 0.7, width = 0.4) +
+  geom_jitter(width = 0.12, size = 2, alpha = 0.7) +
+  scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  labs(title = "Perceived sycophancy by condition",
+       x = "Condition", y = "Sycophancy (1–5)") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+# 9. Correlations Among Outcome Measures
+
+```{r correlations, fig.width=7, fig.height=6}
+df_cor <- df %>%
+  select(opinion_change, competence, trust, satisfaction,
+         sycophancy, credibility, continuance) %>%
+  drop_na()
+
+cor_mat <- cor(df_cor, use = "pairwise.complete.obs", method = "spearman")
+round(cor_mat, 2) %>%
+  kable(caption = "Spearman correlations among outcome measures") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+# 10. Qualitative Results
+
+## Randomized Qualitative Experience Question
+
+```{r qual-results}
+
+labels <- c(
+  "A043" = "Trust",
+  "A059" = "Sycophancy",
+  "A060" = "Credibility",
+  "A045" = "Satisfaction",
+  "A042" = "Competence",
+  "A061" = "Continuance"
+)
+
+# df %>%
+#   summarise(qualQ = labels[qualQ],
+#             if (qualQ == "Competence") competence) %>%
+#   kable(caption = "Open Answers") %>%
+#   kable_styling(bootstrap_options = "striped")
+
+
+df %>%
+  mutate(
+    qualitative_question = labels[qualQ],
+    question_mean = case_match(
+      qualQ,
+      "A043" ~ round(trust, 1),
+      "A059" ~ round(sycophancy, 1),
+      "A060" ~ round(credibility, 1),
+      "A045" ~ round(satisfaction, 1),
+      "A042" ~ round(competence, 1),
+      "A061" ~ round(continuance, 1),
+      
+      .default = NA
+    )
+  ) %>%
+  select(CASE, qualitative_question, question_mean, expQual) %>%
+  arrange(qualitative_question) %>%
+  kable(caption = "Qualitative Experience Question") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+
+
+## Purpose of study
+
+```{r}
+
+df %>%
+  select(CASE, purpose) %>%
+  kable(caption = "Purpose Question") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+## Optional Debrief Question
+
+```{r}
+df %>%
+  filter(!is.na(debrief_question)) %>%
+  select(CASE, debrief_question) %>%
+  kable(caption = "Debrief Question") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+

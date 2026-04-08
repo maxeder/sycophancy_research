@@ -1,5 +1,0 @@
-"0","df %>%"
-"0","  count(gender) %>%"
-"0","  mutate(pct = round(100 * n / sum(n), 1)) %>%"
-"0","  kable(caption = ""Gender distribution"") %>%"
-"0","  kable_styling(bootstrap_options = ""striped"")"
