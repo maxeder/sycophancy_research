@@ -212,6 +212,23 @@ cont_plot
 # Mean of conditions & delta between conditions
 
 ```{r}
+# remove turn 0
+df_unp <- df_unp %>%
+  filter(turn!=0)
+
+df_syc <- df_syc %>%
+  filter(turn!=0)
+
+df_cont <- df_cont %>%
+  filter(turn!=0)
+
+```
+
+
+```{r}
+
+# unprompted
+
 stance_means_unp <- df_unp %>%
   group_by(user_stance) %>%
   summarize(avg_score = mean(mean_score, na.rm = TRUE))
@@ -220,6 +237,8 @@ delta_unp <- stance_means_unp$avg_score[stance_means_unp$user_stance == "Pro"] -
   stance_means_unp$avg_score[stance_means_unp$user_stance == "Con"]
 
 
+# sycophancy
+
 stance_means_syc <- df_syc %>%
   group_by(user_stance) %>%
   summarize(avg_score = mean(mean_score, na.rm = TRUE))
@@ -227,12 +246,26 @@ stance_means_syc <- df_syc %>%
 delta_syc <- stance_means_syc$avg_score[stance_means_syc$user_stance == "Pro"] - 
   stance_means_syc$avg_score[stance_means_syc$user_stance == "Con"]
 
+
+# contrarian
+
+stance_means_cont <- df_cont %>%
+  group_by(user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE))
+
+delta_cont <- stance_means_cont$avg_score[stance_means_cont$user_stance == "Pro"] - 
+  stance_means_cont$avg_score[stance_means_cont$user_stance == "Con"]
+
+
 print("Unprompted Condition:")
 print(stance_means_unp)
 print(delta_unp)
 print("Unprompted Condition:")
 print(stance_means_syc)
 print(delta_syc)
+print("Unprompted Condition:")
+print(stance_means_cont)
+print(delta_cont)
 ```
 ```{r}
 
@@ -240,14 +273,16 @@ print(delta_syc)
 comparison <- data.frame(
   Stance = stance_means_unp$user_stance,
   Unprompted = round(stance_means_unp$avg_score, 3),
-  Sycophantic = round(stance_means_syc$avg_score, 3)
+  Sycophantic = round(stance_means_syc$avg_score, 3),
+  Contrarian = round(stance_means_cont$avg_score, 3)
 )
 
 # Add a delta row
 comparison <- rbind(comparison, data.frame(
   Stance = "Δ (Pro − Con)",
   Unprompted = round(delta_unp, 3),
-  Sycophantic = round(delta_syc, 3)
+  Sycophantic = round(delta_syc, 3),
+  Contrarian = round(delta_cont, 3)
 ))
 
 kable(comparison, caption = "Mean Scores by Stance: Unprompted vs. Sycophantic") %>%
@@ -259,33 +294,36 @@ kable(comparison, caption = "Mean Scores by Stance: Unprompted vs. Sycophantic")
 
 
 
-```{r}
-
-# Combine data with a condition label
-stance_means_unp$condition <- "Unprompted"
-stance_means_syc$condition <- "Sycophantic"
-combined <- rbind(stance_means_unp, stance_means_syc)
-
-ggplot(combined, aes(x = condition, y = avg_score, fill = user_stance)) +
-  geom_col(position = "dodge", width = 0.6) +
-  geom_text(aes(label = round(avg_score, 2)), 
-            position = position_dodge(width = 0.6), vjust = -0.5, size = 3.5) +
-  labs(x = "User Stance", y = "Mean Score", fill = "Condition",
-       title = "Mean Score by Stance and Condition") +
-  theme_minimal()
-```
+# ```{r}
+# 
+# # Combine data with a condition label
+# stance_means_unp$condition <- "Unprompted"
+# stance_means_syc$condition <- "Sycophantic"
+# stance_means_cont$condition <- "Contrarian"
+# combined <- rbind(stance_means_cont, stance_means_unp, stance_means_syc)
+# 
+# ggplot(combined, aes(x = condition, y = avg_score, fill = user_stance)) +
+#   geom_col(position = "dodge", width = 0.6) +
+#   geom_text(aes(label = round(avg_score, 2)), 
+#             position = position_dodge(width = 0.6), vjust = -0.5, size = 3.5) +
+#   labs(x = "User Stance", y = "Mean Score", fill = "Condition",
+#        title = "Mean Score by Stance and Condition") +
+#   theme_minimal()
+# ```
 
 
 ```{r}
 
 deltas <- data.frame(
-  Condition = c("Unprompted", "Sycophantic"),
-  Delta = c(delta_unp, delta_syc)
+  Condition = c("Contrarian", "Unprompted", "Sycophantic"),
+  Delta = c(delta_cont, delta_unp, delta_syc)
 )
+
+deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
 
 ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
   geom_col(width = 0.5) +
-  geom_text(aes(label = round(Delta, 3)), vjust = -0.5, size = 4) +
+  geom_text(aes(label = round(Delta, 2)), vjust = -0.5, size = 3.5) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   labs(
     title = "Stance Gap (Pro − Con) by Condition",
@@ -293,8 +331,8 @@ ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
     x = NULL
   ) +
   theme_minimal() +
-  theme(legend.position = "none") 
-  # scale_fill_manual(values = c("Sycophantic" = "#e74c3c", "Unprompted" = "#3498db"))
+  theme(legend.position = "none") +
+  scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
 
 ```
 
@@ -309,19 +347,25 @@ compute_delta <- function(data, indices) {
 set.seed(42)
 boot_unp <- boot(df_unp, compute_delta, R = 5000)
 boot_syc <- boot(df_syc, compute_delta, R = 5000)
+boot_cont <- boot(df_cont, compute_delta, R = 5000)
 
 ci_unp <- boot.ci(boot_unp, type = "bca")$bca[4:5]
 ci_syc <- boot.ci(boot_syc, type = "bca")$bca[4:5]
+ci_cont <- boot.ci(boot_cont, type = "bca")$bca[4:5]
 
 print(ci_unp)
 print(ci_syc)
+print(ci_cont)
 
 deltas <- data.frame(
-  Condition = c("Unprompted", "Sycophantic"),
-  Delta = c(boot_unp$t0, boot_syc$t0),
-  CI_low = c(ci_unp[1], ci_syc[1]),
-  CI_high = c(ci_unp[2], ci_syc[2])
+  Condition = c("Unprompted", "Sycophantic",  "Contrarian"),
+  Delta = c(boot_unp$t0, boot_syc$t0, boot_cont$t0),
+  CI_low = c(ci_unp[1], ci_syc[1], ci_cont[1]),
+  CI_high = c(ci_unp[2], ci_syc[2], ci_cont[2])
 )
+
+deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+
 
 ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
   geom_col(width = 0.5) +
@@ -333,8 +377,9 @@ ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
     y = "Δ Mean Score", x = NULL
   ) +
   theme_minimal() +
+  coord_cartesian(ylim = c(-3, 3)) +
   theme(legend.position = "none") +
-  scale_fill_manual(values = c("Sycophantic" = "#e74c3c", "Unprompted" = "#3498db"))
+  scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
 ```
 
 
