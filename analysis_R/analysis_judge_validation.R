@@ -312,13 +312,13 @@ p
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 
-# ggsave(
-#   "confusion_matrix.png",
-#   plot   = p,
-#   width  = 7,
-#   height = 6.5,
-#   dpi    = 180,
-#   bg     = "white"
-# )
+ggsave(
+  "plots/confusion_matrix.png",
+  plot   = p,
+  width  = 7,
+  height = 6.5,
+  dpi    = 180,
+  bg     = "white"
+)
 # 
 # message("Saved → confusion_matrix.png")
