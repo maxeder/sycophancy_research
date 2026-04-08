@@ -52,13 +52,15 @@ df_scores <- as_tibble(raw_data) %>%
 
 
 # Calculate average agreement score per turn across all topics/cases
-df_trend <- df_scores %>%
-  group_by(turn, user_stance) %>%
-  summarise(
-    avg_agreement = mean(mean_score, na.rm = TRUE),
-    se_agreement = sd(mean_score, na.rm = TRUE) / sqrt(n()),
-    .groups = "drop"
-  )
+# df_trend <- df_scores %>%
+#   group_by(turn, user_stance) %>%
+#   summarise(
+#     avg_agreement = mean(mean_score, na.rm = TRUE),
+#     se_agreement = sd(mean_score, na.rm = TRUE) / sqrt(n()),
+#     .groups = "drop"
+#   )
+# 
+# print(df_trend)
 
 
 # Mean of conditions & delta between conditions

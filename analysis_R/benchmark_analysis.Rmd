@@ -1,0 +1,263 @@
+
+# Packages
+
+```{r packages}
+library(jsonlite)
+library(tidyverse)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(boot)
+```
+
+# Data Loading & Cleaning
+
+```{r load-data}
+
+unp_data_raw <- fromJSON("../judge_output_final/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
+syc_data_raw <- fromJSON("../judge_output_final/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
+# cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
+
+
+df_unp <- as_tibble(unp_data_raw) %>%
+  select(case_id, topic_key, user_stance, classified_response) %>%
+  unnest(classified_response) %>% 
+  select(case_id, topic_key, user_stance, turn, mean_score)
+
+
+df_syc <- as_tibble(syc_data_raw) %>%
+  select(case_id, topic_key, user_stance, classified_response) %>%
+  unnest(classified_response) %>% 
+  select(case_id, topic_key, user_stance, turn, mean_score)
+
+# 
+# df_cont <- as_tibble(cont_data_raw) %>%
+#   select(case_id, topic_key, user_stance, classified_response) %>%
+#   unnest(classified_response) %>% 
+#   select(case_id, topic_key, user_stance, turn, mean_score)
+```
+
+
+# Unprompted Plot
+
+```{r}
+
+ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+  
+  # Data Points
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1.5) +
+  
+  # Error Ribbon
+  # with standard error
+  # stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
+  # with 95% Confidence Interval
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
+  
+  # Trend Line
+  # connect mean score of each turn
+  stat_summary(fun = mean, geom = "line", linewidth = 1.2) +
+  
+  # Mean Points
+  # dot for the average at each turn
+  stat_summary(fun = mean, geom = "point", size = 3, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
+  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  
+  labs(
+#     title = "Model Agreement with Debate Topic over Turns",
+    title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
+    # subtitle = "Raw response scores (dots) vs. Average trend (line)",
+    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
+    color = "User Stance", 
+    fill = "User Stance",
+    x = "Conversation Turn",
+    y = "Classification Score (Alignment with Topic)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+
+# Sycophantic Plot
+
+```{r}
+
+ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+  
+  # Data Points
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1.5) +
+  
+  # Error Ribbon
+  # with standard error
+  # stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
+  # with 95% Confidence Interval
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
+  
+  # Trend Line
+  # connect mean score of each turn
+  stat_summary(fun = mean, geom = "line", linewidth = 1.2) +
+  
+  # Mean Points
+  # dot for the average at each turn
+  stat_summary(fun = mean, geom = "point", size = 3, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
+  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  
+  labs(
+#     title = "Model Agreement with Debate Topic over Turns",
+    title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
+    # subtitle = "Raw response scores (dots) vs. Average trend (line)",
+    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
+    color = "User Stance", 
+    fill = "User Stance",
+    x = "Conversation Turn",
+    y = "Classification Score (Alignment with Topic)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+
+
+
+
+
+
+# Mean of conditions & delta between conditions
+
+```{r}
+stance_means_unp <- df_unp %>%
+  group_by(user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE))
+
+delta_unp <- stance_means_unp$avg_score[stance_means_unp$user_stance == "Pro"] - 
+  stance_means_unp$avg_score[stance_means_unp$user_stance == "Con"]
+
+
+stance_means_syc <- df_syc %>%
+  group_by(user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE))
+
+delta_syc <- stance_means_syc$avg_score[stance_means_syc$user_stance == "Pro"] - 
+  stance_means_syc$avg_score[stance_means_syc$user_stance == "Con"]
+
+print("Unprompted Condition:")
+print(stance_means_unp)
+print(delta_unp)
+print("Unprompted Condition:")
+print(stance_means_syc)
+print(delta_syc)
+```
+```{r}
+
+# Combine into one table
+comparison <- data.frame(
+  Stance = stance_means_unp$user_stance,
+  Unprompted = round(stance_means_unp$avg_score, 3),
+  Sycophantic = round(stance_means_syc$avg_score, 3)
+)
+
+# Add a delta row
+comparison <- rbind(comparison, data.frame(
+  Stance = "Δ (Pro − Con)",
+  Unprompted = round(delta_unp, 3),
+  Sycophantic = round(delta_syc, 3)
+))
+
+kable(comparison, caption = "Mean Scores by Stance: Unprompted vs. Sycophantic") %>%
+  kable_styling(full_width = FALSE) %>%
+  row_spec(nrow(comparison), bold = TRUE, background = "#f0f0f0")
+```
+
+
+
+
+
+```{r}
+
+# Combine data with a condition label
+stance_means_unp$condition <- "Unprompted"
+stance_means_syc$condition <- "Sycophantic"
+combined <- rbind(stance_means_unp, stance_means_syc)
+
+ggplot(combined, aes(x = condition, y = avg_score, fill = user_stance)) +
+  geom_col(position = "dodge", width = 0.6) +
+  geom_text(aes(label = round(avg_score, 2)), 
+            position = position_dodge(width = 0.6), vjust = -0.5, size = 3.5) +
+  labs(x = "User Stance", y = "Mean Score", fill = "Condition",
+       title = "Mean Score by Stance and Condition") +
+  theme_minimal()
+```
+
+
+```{r}
+
+deltas <- data.frame(
+  Condition = c("Unprompted", "Sycophantic"),
+  Delta = c(delta_unp, delta_syc)
+)
+
+ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
+  geom_col(width = 0.5) +
+  geom_text(aes(label = round(Delta, 3)), vjust = -0.5, size = 4) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = "Stance Gap (Pro − Con) by Condition",
+    y = "Δ Mean Score",
+    x = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") 
+  # scale_fill_manual(values = c("Sycophantic" = "#e74c3c", "Unprompted" = "#3498db"))
+
+```
+
+
+```{r}
+compute_delta <- function(data, indices) {
+  d <- data[indices, ]
+  means <- tapply(d$mean_score, d$user_stance, mean, na.rm = TRUE)
+  means["Pro"] - means["Con"]
+}
+
+set.seed(42)
+boot_unp <- boot(df_unp, compute_delta, R = 5000)
+boot_syc <- boot(df_syc, compute_delta, R = 5000)
+
+ci_unp <- boot.ci(boot_unp, type = "bca")$percent[4:5]
+ci_syc <- boot.ci(boot_syc, type = "bca")$percent[4:5]
+
+print(ci_unp)
+print(ci_syc)
+
+deltas <- data.frame(
+  Condition = c("Unprompted", "Sycophantic"),
+  Delta = c(boot_unp$t0, boot_syc$t0),
+  CI_low = c(ci_unp[1], ci_syc[1]),
+  CI_high = c(ci_unp[2], ci_syc[2])
+)
+
+ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
+  geom_col(width = 0.5) +
+  geom_errorbar(aes(ymin = CI_low, ymax = CI_high), width = 0.15) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = "Stance Gap (Pro − Con) by Condition",
+    subtitle = "Error bars = 95% BCa bootstrap CI (5000 resamples)",
+    y = "Δ Mean Score", x = NULL
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_manual(values = c("Sycophantic" = "#e74c3c", "Unprompted" = "#3498db"))
+```
+
+
