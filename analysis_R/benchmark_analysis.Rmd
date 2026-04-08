@@ -16,7 +16,7 @@ library(boot)
 
 unp_data_raw <- fromJSON("../judge_output_final/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
 syc_data_raw <- fromJSON("../judge_output_final/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
-# cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
+cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
 
 
 df_unp <- as_tibble(unp_data_raw) %>%
@@ -30,11 +30,11 @@ df_syc <- as_tibble(syc_data_raw) %>%
   unnest(classified_response) %>% 
   select(case_id, topic_key, user_stance, turn, mean_score)
 
-# 
-# df_cont <- as_tibble(cont_data_raw) %>%
-#   select(case_id, topic_key, user_stance, classified_response) %>%
-#   unnest(classified_response) %>% 
-#   select(case_id, topic_key, user_stance, turn, mean_score)
+
+df_cont <- as_tibble(cont_data_raw) %>%
+  select(case_id, topic_key, user_stance, classified_response) %>%
+  unnest(classified_response) %>%
+  select(case_id, topic_key, user_stance, turn, mean_score)
 ```
 
 
@@ -42,10 +42,15 @@ df_syc <- as_tibble(syc_data_raw) %>%
 
 ```{r}
 
-ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+unp_plot <- ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # Data Points
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1.5) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1) +
+  # geom_boxplot(aes(group = interaction(turn, user_stance)),
+  #              position = position_dodge(width = 0.6),
+  #              width = 0.4, alpha = 0.2, outlier.size = 0.8, outlier.alpha = 0.3) +
+  
+
   
   # Error Ribbon
   # with standard error
@@ -55,7 +60,7 @@ ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_st
   
   # Trend Line
   # connect mean score of each turn
-  stat_summary(fun = mean, geom = "line", linewidth = 1.2) +
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
   
   # Mean Points
   # dot for the average at each turn
@@ -69,16 +74,19 @@ ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_st
   
   labs(
 #     title = "Model Agreement with Debate Topic over Turns",
-    title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
+    # title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
     # subtitle = "Raw response scores (dots) vs. Average trend (line)",
-    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
+    # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
     x = "Conversation Turn",
     y = "Classification Score (Alignment with Topic)"
   ) +
   theme_minimal() +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") 
+
+unp_plot
+ggsave("unprompted_plot.pdf", plot = unp_plot, width=8, height=5)
 
 ```
 
@@ -100,7 +108,7 @@ ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fill = user_st
   
   # Trend Line
   # connect mean score of each turn
-  stat_summary(fun = mean, geom = "line", linewidth = 1.2) +
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
   
   # Mean Points
   # dot for the average at each turn
@@ -129,6 +137,49 @@ ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fill = user_st
 
 
 
+# Contrarian Plot
+
+```{r}
+
+ggplot(df_cont, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+  
+  # Data Points
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1.5) +
+  
+  # Error Ribbon
+  # with standard error
+  # stat_summary(geom = "ribbon", fun.data = mean_se, alpha = 0.2, color = NA) +
+  # with 95% Confidence Interval
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
+  
+  # Trend Line
+  # connect mean score of each turn
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
+
+  # Mean Points
+  # dot for the average at each turn
+  stat_summary(fun = mean, geom = "point", size = 3, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
+  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  
+  labs(
+#     title = "Model Agreement with Debate Topic over Turns",
+    title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
+    # subtitle = "Raw response scores (dots) vs. Average trend (line)",
+    subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
+    color = "User Stance", 
+    fill = "User Stance",
+    x = "Conversation Turn",
+    y = "Classification Score (Alignment with Topic)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
 
 
 
@@ -233,8 +284,8 @@ set.seed(42)
 boot_unp <- boot(df_unp, compute_delta, R = 5000)
 boot_syc <- boot(df_syc, compute_delta, R = 5000)
 
-ci_unp <- boot.ci(boot_unp, type = "bca")$percent[4:5]
-ci_syc <- boot.ci(boot_syc, type = "bca")$percent[4:5]
+ci_unp <- boot.ci(boot_unp, type = "bca")$bca[4:5]
+ci_syc <- boot.ci(boot_syc, type = "bca")$bca[4:5]
 
 print(ci_unp)
 print(ci_syc)
