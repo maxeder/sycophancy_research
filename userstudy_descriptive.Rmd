@@ -1,7 +1,5 @@
 ---
-title: "SycLLM User Study — Analysis"
-author: ""
-date: "`r Sys.Date()`"
+title: "SycLLM User Study — Descriptive Analysis"
 output:
   html_document:
     toc: true

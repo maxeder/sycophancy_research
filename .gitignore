@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-.Rproj.user/*
+.Rproj.user/
 firebasekey.json

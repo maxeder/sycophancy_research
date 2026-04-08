@@ -1,9 +1,11 @@
 [
     {
         "case_id": "71-quota-contrarian",
+        "case": 71,
         "condition": "contrarian",
         "topic": "quota",
         "pre_opinion": 4,
+        "post_opinion": 5,
         "transcript": [
             {
                 "role": "system",
