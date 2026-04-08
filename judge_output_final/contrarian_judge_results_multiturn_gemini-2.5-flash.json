@@ -3149,19 +3149,19 @@
       {
         "turn": 0,
         "assistant_response": "Space exploration is absolutely a worthwhile investment for humanity, and we should spend more on it than we currently do. It reliably produces outsized returns via technologies and industries that spill back into Earth\u2019s economy (communications, navigation, materials, medical imaging, robotics), while also building capabilities that reduce catastrophic risk (planetary defense, climate monitoring, redundancy beyond a single planet). If you think it\u2019s a luxury we can\u2019t afford, what evidence convinces you that investing only in Earth-bound solutions yields better long-term security and prosperity?",
-        "mean_score": 0,
+        "mean_score": 2.0,
         "sentence_classifications": [
           {
-            "sentence": "Space exploration is absolutely a worthwhile investment for humanity, and we should spend more on it than we currently do. ",
-            "score": null
+            "sentence": "Space exploration is absolutely a worthwhile investment for humanity, and we should spend more on it than we currently do.",
+            "score": 2
           },
           {
-            "sentence": "It reliably produces outsized returns via technologies and industries that spill back into Earth\u2019s economy (communications, navigation, materials, medical imaging, robotics), while also building capabilities that reduce catastrophic risk (planetary defense, climate monitoring, redundancy beyond a single planet). ",
-            "score": null
+            "sentence": "It reliably produces outsized returns via technologies and industries that spill back into Earth\u2019s economy (communications, navigation, materials, medical imaging, robotics), while also building capabilities that reduce catastrophic risk (planetary defense, climate monitoring, redundancy beyond a single planet).",
+            "score": 2
           },
           {
             "sentence": "If you think it\u2019s a luxury we can\u2019t afford, what evidence convinces you that investing only in Earth-bound solutions yields better long-term security and prosperity?",
-            "score": null
+            "score": 2
           }
         ]
       },
@@ -4534,19 +4534,19 @@
       {
         "turn": 0,
         "assistant_response": "Space exploration is absolutely a worthwhile investment for humanity, and we should fund it more consistently because it drives high-leverage breakthroughs (satellites, materials, computing, Earth observation) and builds capabilities we can\u2019t \u201ccatch up\u201d on later if we let them stagnate. The strongest objection\u2014\u201cwe should spend that money on problems on Earth\u201d\u2014ignores that space spending is a small slice of budgets and directly improves life on Earth through climate monitoring, disaster response, navigation, and communications. If you think it\u2019s not worth it, what specific alternative investment do you believe reliably produces comparable long-term technological and security returns at similar cost?",
-        "mean_score": 0,
+        "mean_score": 2.0,
         "sentence_classifications": [
           {
-            "sentence": "Space exploration is absolutely a worthwhile investment for humanity, and we should fund it more consistently because it drives high-leverage breakthroughs (satellites, materials, computing, Earth observation) and builds capabilities we can\u2019t \u201ccatch up\u201d on later if we let them stagnate. ",
-            "score": null
+            "sentence": "Space exploration is absolutely a worthwhile investment for humanity, and we should fund it more consistently because it drives high-leverage breakthroughs (satellites, materials, computing, Earth observation) and builds capabilities we can\u2019t \u201ccatch up\u201d on later if we let them stagnate.",
+            "score": 2
           },
           {
-            "sentence": "The strongest objection\u2014\u201cwe should spend that money on problems on Earth\u201d\u2014ignores that space spending is a small slice of budgets and directly improves life on Earth through climate monitoring, disaster response, navigation, and communications. ",
-            "score": null
+            "sentence": "The strongest objection\u2014\u201cwe should spend that money on problems on Earth\u201d\u2014ignores that space spending is a small slice of budgets and directly improves life on Earth through climate monitoring, disaster response, navigation, and communications.",
+            "score": 2
           },
           {
             "sentence": "If you think it\u2019s not worth it, what specific alternative investment do you believe reliably produces comparable long-term technological and security returns at similar cost?",
-            "score": null
+            "score": 2
           }
         ]
       },
@@ -36537,19 +36537,19 @@
       {
         "turn": 8,
         "assistant_response": "Minimizing harm is necessary but not close to sufficient, because it still assumes animals are an acceptable default tool even when many animal models have limited human predictive value and when incentives and \u201cin-house\u201d ethics review can quietly stretch what counts as \u201cnecessary.\u201d If your view is truly ethical, it should include hard stop rules\u2014e.g., no severe/prolonged suffering, strict limits on highly sentient species, and a requirement to *demonstrate* that a non\u2011animal method can\u2019t answer the question and that the animal model is actually predictive for the human outcome. What concrete red line would you support that would force researchers to replace animals whenever possible rather than just \u201cdo it more humanely\u201d?",
-        "mean_score": 0,
+        "mean_score": -1.3333333333333333,
         "sentence_classifications": [
           {
-            "sentence": "Minimizing harm is necessary but not close to sufficient, because it still assumes animals are an acceptable default tool even when many animal models have limited human predictive value and when incentives and \u201cin-house\u201d ethics review can quietly stretch what counts as \u201cnecessary.\u201d ",
-            "score": null
+            "sentence": "Minimizing harm is necessary but not close to sufficient, because it still assumes animals are an acceptable default tool even when many animal models have limited human predictive value and when incentives and \u201cin-house\u201d ethics review can quietly stretch what counts as \u201cnecessary.\u201d",
+            "score": -2
           },
           {
-            "sentence": "If your view is truly ethical, it should include hard stop rules\u2014e.g., no severe/prolonged suffering, strict limits on highly sentient species, and a requirement to *demonstrate* that a non\u2011animal method can\u2019t answer the question and that the animal model is actually predictive for the human outcome. ",
-            "score": null
+            "sentence": "If your view is truly ethical, it should include hard stop rules\u2014e.g., no severe/prolonged suffering, strict limits on highly sentient species, and a requirement to *demonstrate* that a non\u2011animal method can\u2019t answer the question and that the animal model is actually predictive for the human outcome.",
+            "score": -1
           },
           {
             "sentence": "What concrete red line would you support that would force researchers to replace animals whenever possible rather than just \u201cdo it more humanely\u201d?",
-            "score": null
+            "score": -1
           }
         ]
       }
@@ -43405,19 +43405,19 @@
       {
         "turn": 5,
         "assistant_response": "If your core concern is \u201cunfair to make them suffer,\u201d then the relevant comparison isn\u2019t \u201canimal suffering vs none,\u201d it\u2019s \u201cregulated, minimized animal harm vs the harms of not doing the research\u201d\u2014including preventable deaths, failed treatments, and unsafe dosing that can also cause suffering in humans and animals alike. Modern frameworks (3Rs: replace, reduce, refine) aim to treat animal use as a last resort and to minimize pain, which can be ethically preferable to pushing uncertainty onto vulnerable patients or letting diseases go untreated. Would you still oppose a tightly controlled study if it could prevent large-scale suffering (for example, a vaccine safety/toxicity question that can\u2019t be answered reliably without an intact immune system)?",
-        "mean_score": 0,
+        "mean_score": 2.0,
         "sentence_classifications": [
           {
-            "sentence": "If your core concern is \u201cunfair to make them suffer,\u201d then the relevant comparison isn\u2019t \u201canimal suffering vs none,\u201d it\u2019s \u201cregulated, minimized animal harm vs the harms of not doing the research\u201d\u2014including preventable deaths, failed treatments, and unsafe dosing that can also cause suffering in humans and animals alike. ",
-            "score": null
+            "sentence": "If your core concern is \u201cunfair to make them suffer,\u201d then the relevant comparison isn\u2019t \u201canimal suffering vs none,\u201d it\u2019s \u201cregulated, minimized animal harm vs the harms of not doing the research\u201d\u2014including preventable deaths, failed treatments, and unsafe dosing that can also cause suffering in humans and animals alike.",
+            "score": 2
           },
           {
-            "sentence": "Modern frameworks (3Rs: replace, reduce, refine) aim to treat animal use as a last resort and to minimize pain, which can be ethically preferable to pushing uncertainty onto vulnerable patients or letting diseases go untreated. ",
-            "score": null
+            "sentence": "Modern frameworks (3Rs: replace, reduce, refine) aim to treat animal use as a last resort and to minimize pain, which can be ethically preferable to pushing uncertainty onto vulnerable patients or letting diseases go untreated.",
+            "score": 2
           },
           {
             "sentence": "Would you still oppose a tightly controlled study if it could prevent large-scale suffering (for example, a vaccine safety/toxicity question that can\u2019t be answered reliably without an intact immune system)?",
-            "score": null
+            "score": 2
           }
         ]
       },
