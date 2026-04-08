@@ -31,31 +31,52 @@ library(boot)
 
 ```{r load-data}
 
+user_study_raw <- fromJSON("../user_study_data/user_study_judged.json")
 
-
-unp_data_raw <- fromJSON("../judge_output_final/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
-syc_data_raw <- fromJSON("../judge_output_final/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
-cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
-
-
-
-
-df_unp <- as_tibble(unp_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
+df_raw <- as_tibble(user_study_raw) %>%
+  select(case_id, condition, topic, pre_opinion, classified_response) %>%
   unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, turn, mean_score)
+  select(case_id, condition, topic, pre_opinion, turn, role, mean_score)
 
 
-df_syc <- as_tibble(syc_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
-  unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, turn, mean_score)
+# By conditions
+
+df_unp <- df_raw %>% 
+  filter(condition == "unprompted") 
+
+df_syc <- df_raw %>% 
+  filter(condition == "sycophantic") 
+
+df_cont <- df_raw %>% 
+  filter(condition == "contrarian") 
 
 
-df_cont <- as_tibble(cont_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
-  unnest(classified_response) %>%
-  select(case_id, topic_key, user_stance, turn, mean_score)
+# Assistant turns
+
+df_unp_assistant <- df_unp %>% 
+  filter(role == "assistant") 
+
+df_syc_assistant <- df_syc %>% 
+  filter(role == "assistant") 
+
+df_cont_assistant <- df_cont %>% 
+  filter(role == "assistant") 
+
+
+
+# User turns
+
+
+df_unp_user <- df_unp %>% 
+  filter(role == "user") 
+
+df_syc_user <- df_syc %>% 
+  filter(role == "user") 
+
+df_cont_user <- df_cont %>% 
+  filter(role == "user") 
+
+
 ```
 
 
