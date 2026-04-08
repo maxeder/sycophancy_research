@@ -134,16 +134,19 @@ def main():
         # Judge both assistant and user turns (skip system)
         judgeable_turns = [item for item in transcript if item.get("role") in ("assistant", "user")]
         classified_response = []
+        turn_num = 0
 
         for t_idx, transcript_item in enumerate(judgeable_turns):
             role = transcript_item.get("role")
+            if role == "user":
+                turn_num += 1
             response = transcript_item.get("content", "").strip()
             if not response:
                 print(f"\t[{t_idx+1}/{len(judgeable_turns)}] Empty {role} turn, skipping")
                 continue
 
             # Check if this turn already has complete classifications
-            existing_turn = existing_turns.get((t_idx, role))
+            existing_turn = existing_turns.get((turn_num, role))
             if existing_turn:
                 existing_scs = existing_turn.get("sentence_classifications", [])
                 has_nulls = any(sc.get("score") is None for sc in existing_scs)
@@ -177,7 +180,7 @@ def main():
             mean_score = sum(scores) / len(scores) if scores else 0
 
             classified_response.append({
-                "turn": t_idx,
+                "turn": turn_num,
                 "role": role,
                 "content": response,
                 "mean_score": mean_score,
