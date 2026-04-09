@@ -36,21 +36,21 @@ cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multit
 
 
 df_unp <- as_tibble(unp_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
+  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
   unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, turn, mean_score)
+  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
 
 
 df_syc <- as_tibble(syc_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
+  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
   unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, turn, mean_score)
+  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
 
 
 df_cont <- as_tibble(cont_data_raw) %>%
-  select(case_id, topic_key, user_stance, classified_response) %>%
+  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
   unnest(classified_response) %>%
-  select(case_id, topic_key, user_stance, turn, mean_score)
+  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
 ```
 
 
@@ -382,4 +382,164 @@ ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
   scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
 ```
 
+
+
+# Delta Comparison
+
+```{r}
+library(lme4)
+library(lmerTest)
+library(emmeans)
+
+# Combine all conditions
+df_all <- bind_rows(
+  df_unp %>% mutate(condition = "unprompted"),
+  df_syc %>% mutate(condition = "sycophantic"),
+  df_cont %>% mutate(condition = "contrarian")
+)
+
+df_all$condition <- factor(df_all$condition,
+                           levels = c("unprompted", "sycophantic", "contrarian"))
+df_all$user_stance <- factor(df_all$user_stance)
+df_all$topic <- factor(df_all$topic_key)
+
+# The interaction is your delta
+model <- lmer(mean_score ~ condition * user_stance + (1 | topic), data = df_all)
+
+summary(model)
+anova(model)
+
+
+
+# pairwise comparison
+
+emm <- emmeans(model, ~ user_stance | condition)
+# The deltas
+pairs(emm)  # pro - con within each condition
+
+# Compare deltas across conditions
+emm_int <- emmeans(model, ~ condition * user_stance)
+contrast(emm_int, interaction = "pairwise", adjust = "tukey")
+```
+
+
+
+
+## Delta Calc
+
+```{r}
+
+# 3. Linear Mixed-Effects Model
+# -----------------------------------------------------------------------------
+# Fixed effect:  condition (what we care about)
+# Random effect: topic (blocking factor, sampled from larger universe)
+
+library(lmerTest)
+library(emmeans)
+
+# with topic 
+
+deltas_unp <- df_unp %>%
+  group_by(topic_key, user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
+  mutate(delta = Pro - Con, condition = "unprompted")
+
+deltas_syc <- df_syc %>%
+  group_by(topic_key, user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
+  mutate(delta = Pro - Con, condition = "sycophantic")
+
+deltas_cont <- df_cont %>%
+  group_by(topic_key, user_stance) %>%
+  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
+  mutate(delta = Pro - Con, condition = "contrarian")
+
+
+deltas_combined <- rbind(deltas_unp, deltas_syc, deltas_cont)
+
+head(deltas_unp)
+
+
+
+ 
+model <- lmer(delta ~ condition + (1 | topic_key), data = deltas_combined)
+ 
+summary(model)
+anova(model)  # Type III F-test for condition effect (from lmerTest)
+ 
+# Check random effect variance — if near zero, topic doesn't matter much
+VarCorr(model)
+ 
+# -----------------------------------------------------------------------------
+# 4. Pairwise Comparisons (Tukey-adjusted)
+# -----------------------------------------------------------------------------
+emm <- emmeans(model, ~ condition)
+emm
+ 
+# Pairwise contrasts with multiplicity correction
+pairs(emm, adjust = "tukey")
+ 
+# Effect sizes (Cohen's d style, using sigma from model)
+eff_size(emm, sigma = sigma(model), edf = df.residual(model))
+ 
+# -----------------------------------------------------------------------------
+# 5. Specific Hypotheses You Likely Care About
+# -----------------------------------------------------------------------------
+# H1: Sycophantic delta > Unprompted delta (model shifts MORE toward user)
+# H2: Contrarian delta < Unprompted delta (model shifts LESS / opposes user)
+# H3: Sycophantic delta > Contrarian delta
+ 
+contrasts <- list(
+  "sycophantic - unprompted" = c(0, 1, 0) - c(1, 0, 0),
+  "contrarian - unprompted"  = c(0, 0, 1) - c(1, 0, 0),
+  "sycophantic - contrarian" = c(0, 1, 0) - c(0, 0, 1)
+)
+ 
+# Note: contrast weights depend on your factor level ordering.
+# With levels = c("unprompted", "sycophantic", "contrarian"):
+contrast(emm, method = list(
+  "sycophantic - unprompted" = c(-1,  1,  0),
+  "contrarian - unprompted"  = c(-1,  0,  1),
+  "sycophantic - contrarian" = c( 0,  1, -1)
+), adjust = "holm")
+ 
+# -----------------------------------------------------------------------------
+# 6. Assumption Checks
+# -----------------------------------------------------------------------------
+# Residual normality
+qqnorm(resid(model))
+qqline(resid(model))
+ 
+# Residuals vs fitted
+plot(model, main = "Residuals vs Fitted")
+ 
+# Shapiro-Wilk on residuals (with n=600, will likely reject —
+# visual inspection matters more at this sample size)
+shapiro.test(resid(model))
+ 
+# -----------------------------------------------------------------------------
+# 7. Robustness: Non-parametric alternative
+# -----------------------------------------------------------------------------
+# If assumptions are badly violated, fall back to this.
+# Friedman test requires balanced data per topic x condition,
+# so aggregate to topic-level means first.
+ 
+topic_means <- deltas_combined %>%
+  group_by(condition, topic_key) %>%
+  summarise(mean_delta = mean(delta), .groups = "drop")
+ 
+# Friedman test (repeated measures non-parametric)
+friedman.test(mean_delta ~ condition | topic_key, data = topic_means)
+ 
+# -----------------------------------------------------------------------------
+# 8. Summary Table for Reporting
+# -----------------------------------------------------------------------------
+results <- as.data.frame(pairs(emm, adjust = "tukey"))
+print(results)
+ 
+
+```
 
