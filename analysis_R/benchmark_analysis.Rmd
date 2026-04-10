@@ -26,6 +26,16 @@ library(kableExtra)
 library(boot)
 ```
 
+
+# Color
+
+```{r}
+colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
+
+```
+
+
+
 # Data Loading & Cleaning
 
 ```{r load-data}
@@ -86,7 +96,7 @@ unp_plot <- ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fi
   scale_fill_manual(values = colors) +
   
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  scale_x_continuous(breaks = unique(df_unp$turn)) +
   
   labs(
 #     title = "Model Agreement with Debate Topic over Turns",
@@ -103,6 +113,7 @@ unp_plot <- ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fi
 
 unp_plot
 ggsave("plots/unprompted_plot.pdf", plot = unp_plot, width=8, height=5)
+ggsave("plots/unprompted_plot.png", plot = unp_plot, width=8, height=5)
 
 ```
 
@@ -134,7 +145,7 @@ syc_plot <- ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fi
   scale_fill_manual(values = colors) +
   
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  scale_x_continuous(breaks = unique(df_syc$turn)) +
   
   labs(
 #     title = "Model Agreement with Debate Topic over Turns",
@@ -153,6 +164,7 @@ syc_plot <- ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fi
 
 
 ggsave("plots/sycophantic_plot.pdf", plot = syc_plot, width=8, height=5)
+ggsave("plots/sycophantic_plot.png", plot = syc_plot, width=8, height=5)
 syc_plot
 
 ```
@@ -186,7 +198,7 @@ cont_plot <- ggplot(df_cont, aes(x = turn, y = mean_score, color = user_stance, 
   scale_fill_manual(values = colors) +
   
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(breaks = unique(df_scores$turn)) +
+  scale_x_continuous(breaks = unique(df_cont$turn)) +
   
   labs(
 #     title = "Model Agreement with Debate Topic over Turns",
@@ -203,6 +215,7 @@ cont_plot <- ggplot(df_cont, aes(x = turn, y = mean_score, color = user_stance, 
 
 
 ggsave("plots/contrarian_plot.pdf", plot = cont_plot, width=8, height=5)
+ggsave("plots/contrarian_plot.png", plot = cont_plot, width=8, height=5)
 cont_plot
 
 ```
@@ -312,75 +325,79 @@ kable(comparison, caption = "Mean Scores by Stance: Unprompted vs. Sycophantic")
 # ```
 
 
-```{r}
-
-deltas <- data.frame(
-  Condition = c("Contrarian", "Unprompted", "Sycophantic"),
-  Delta = c(delta_cont, delta_unp, delta_syc)
-)
-
-deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
-
-ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
-  geom_col(width = 0.5) +
-  geom_text(aes(label = round(Delta, 2)), vjust = -0.5, size = 3.5) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  labs(
-    title = "Stance Gap (Pro − Con) by Condition",
-    y = "Δ Mean Score",
-    x = NULL
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
-
-```
-
-
-```{r}
-compute_delta <- function(data, indices) {
-  d <- data[indices, ]
-  means <- tapply(d$mean_score, d$user_stance, mean, na.rm = TRUE)
-  means["Pro"] - means["Con"]
-}
-
-set.seed(42)
-boot_unp <- boot(df_unp, compute_delta, R = 5000)
-boot_syc <- boot(df_syc, compute_delta, R = 5000)
-boot_cont <- boot(df_cont, compute_delta, R = 5000)
-
-ci_unp <- boot.ci(boot_unp, type = "bca")$bca[4:5]
-ci_syc <- boot.ci(boot_syc, type = "bca")$bca[4:5]
-ci_cont <- boot.ci(boot_cont, type = "bca")$bca[4:5]
-
-print(ci_unp)
-print(ci_syc)
-print(ci_cont)
-
-deltas <- data.frame(
-  Condition = c("Unprompted", "Sycophantic",  "Contrarian"),
-  Delta = c(boot_unp$t0, boot_syc$t0, boot_cont$t0),
-  CI_low = c(ci_unp[1], ci_syc[1], ci_cont[1]),
-  CI_high = c(ci_unp[2], ci_syc[2], ci_cont[2])
-)
-
-deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+# ```{r}
+# 
+# deltas <- data.frame(
+#   Condition = c("Contrarian", "Unprompted", "Sycophantic"),
+#   Delta = c(delta_cont, delta_unp, delta_syc)
+# )
+# 
+# deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+# 
+# ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
+#   geom_col(width = 0.5) +
+#   geom_text(aes(label = round(Delta, 2)), vjust = -0.5, size = 3.5) +
+#   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+#   labs(
+#     title = "Stance Gap (Pro − Con) by Condition",
+#     y = "Δ Mean Score",
+#     x = NULL
+#   ) +
+#   theme_minimal() +
+#   theme(legend.position = "none") +
+#   scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
+# 
+# ```
 
 
-ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) +
-  geom_col(width = 0.5) +
-  geom_errorbar(aes(ymin = CI_low, ymax = CI_high), width = 0.15) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
-  labs(
-    title = "Stance Gap (Pro − Con) by Condition",
-    subtitle = "Error bars = 95% BCa bootstrap CI (5000 resamples)",
-    y = "Δ Mean Score", x = NULL
-  ) +
-  theme_minimal() +
-  coord_cartesian(ylim = c(-3, 3)) +
-  theme(legend.position = "none") +
-  scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60"))
-```
+<!-- ```{r} -->
+
+<!-- # TBD use all data points' delta not the mean for comparison for real cis, no bootstrapping ! -->
+
+
+<!-- compute_delta <- function(data, indices) { -->
+<!--   d <- data[indices, ] -->
+<!--   means <- tapply(d$mean_score, d$user_stance, mean, na.rm = TRUE) -->
+<!--   means["Pro"] - means["Con"] -->
+<!-- } -->
+
+<!-- set.seed(42) -->
+<!-- boot_unp <- boot(df_unp, compute_delta, R = 5000) -->
+<!-- boot_syc <- boot(df_syc, compute_delta, R = 5000) -->
+<!-- boot_cont <- boot(df_cont, compute_delta, R = 5000) -->
+
+<!-- ci_unp <- boot.ci(boot_unp, type = "bca")$bca[4:5] -->
+<!-- ci_syc <- boot.ci(boot_syc, type = "bca")$bca[4:5] -->
+<!-- ci_cont <- boot.ci(boot_cont, type = "bca")$bca[4:5] -->
+
+<!-- print(ci_unp) -->
+<!-- print(ci_syc) -->
+<!-- print(ci_cont) -->
+
+<!-- deltas <- data.frame( -->
+<!--   Condition = c("Unprompted", "Sycophantic",  "Contrarian"), -->
+<!--   Delta = c(boot_unp$t0, boot_syc$t0, boot_cont$t0), -->
+<!--   CI_low = c(ci_unp[1], ci_syc[1], ci_cont[1]), -->
+<!--   CI_high = c(ci_unp[2], ci_syc[2], ci_cont[2]) -->
+<!-- ) -->
+
+<!-- deltas$Condition <- factor(deltas$Condition, levels = c("Contrarian", "Unprompted", "Sycophantic")) -->
+
+
+<!-- ggplot(deltas, aes(x = Condition, y = Delta, fill = Condition)) + -->
+<!--   geom_col(width = 0.5) + -->
+<!--   geom_errorbar(aes(ymin = CI_low, ymax = CI_high), width = 0.15) + -->
+<!--   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") + -->
+<!--   labs( -->
+<!--     title = "Stance Gap (Pro − Con) by Condition", -->
+<!--     subtitle = "Error bars = 95% BCa bootstrap CI (5000 resamples)", -->
+<!--     y = "Δ Mean Score", x = NULL -->
+<!--   ) + -->
+<!--   theme_minimal() + -->
+<!--   coord_cartesian(ylim = c(-3, 3)) + -->
+<!--   theme(legend.position = "none") + -->
+<!--   scale_fill_manual(values = c("Contrarian" = "#C0392B", "Unprompted" = "#2980B9", "Sycophantic" = "#27AE60")) -->
+<!-- ``` -->
 
 
 
@@ -407,139 +424,136 @@ df_all$topic <- factor(df_all$topic_key)
 model <- lmer(mean_score ~ condition * user_stance + (1 | topic), data = df_all)
 
 summary(model)
-anova(model)
+aov_res <- anova(model)
 
+vc <- as.data.frame(VarCorr(model))
+topic_var <- vc$vcov[vc$grp == "topic"]
+topic_sd <- vc$sdcor[vc$grp == "topic"]
 
+int_numdf <- aov_res["condition:user_stance", "NumDF"]
+int_dendf <- aov_res["condition:user_stance", "DenDF"]
+int_f <- aov_res["condition:user_stance", "F value"]
 
 # pairwise comparison
 
 emm <- emmeans(model, ~ user_stance | condition)
 # The deltas
-pairs(emm)  # pro - con within each condition
+# pairs(emm)  # pro - con within each condition
+deltas <- as.data.frame(pairs(emm))
 
 # Compare deltas across conditions
 emm_int <- emmeans(model, ~ condition * user_stance)
-contrast(emm_int, interaction = "pairwise", adjust = "tukey")
+interaction_contrasts <- contrast(emm_int, interaction = "pairwise", adjust = "tukey")
+# contrast(emm_int, interaction = "pairwise", adjust = "tukey")
+interaction_df <- as.data.frame(interaction_contrasts)
+
+
+interaction_contrasts
+
+# Extract specific values for inline reporting
+delta_unp_v <- abs(deltas$estimate[deltas$condition == "unprompted"])
+delta_syc_v <- abs(deltas$estimate[deltas$condition == "sycophantic"])
+delta_cont_v <- abs(deltas$estimate[deltas$condition == "contrarian"])
 ```
 
 
+<!-- A linear mixed-effects model was fit predicting mean stance score from condition (unprompted, sycophantic, contrarian), user stance (pro, con), and their interaction, with topic as a random intercept. The condition × user stance interaction was significant (*F*(2, 4790) = `r round(aov_res["condition:user_stance", "F value"], 1)`, *p* < .001), indicating that the magnitude of stance shift varied across conditions. -->
+
+<!-- Within each condition, the pro–con difference (δ) was computed as a measure of the model's tendency to shift toward the user's stated position. The sycophantic condition produced the largest shift (δ = `r round(delta_syc_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "sycophantic"]), 2)`, *p* < .001), followed by the unprompted condition (δ = `r round(delta_unp_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "unprompted"]), 2)`, *p* < .001). The contrarian condition showed a reversal, with the model shifting against the user's position (δ = `r round(-delta_cont_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "contrarian"]), 2)`, *p* < .001). -->
+
+<!-- Pairwise interaction contrasts confirmed that all three conditions differed significantly from each other (all *p* < .001, Tukey-adjusted). The sycophantic–contrarian difference was the largest (Δδ = `r round(abs(interaction_df$estimate[3]), 2)`), followed by the unprompted–contrarian difference (Δδ = `r round(abs(interaction_df$estimate[2]), 2)`) and the sycophantic–unprompted difference (Δδ = `r round(abs(interaction_df$estimate[1]), 2)`). -->
+
+<!-- <!-- The random intercept for topic accounted for a variance of 0.10 (SD = 0.32) ??, indicating moderate variability across topics. --> -->
+
+<!-- The random intercept for topic accounted for a variance of `r round(topic_var, 2)` (SD = `r round(topic_sd, 2)`), indicating moderate variability across topics. -->
 
 
-## Delta Calc
+
+## Delta Comparison Plot
 
 ```{r}
+# head(df_all)
 
-# 3. Linear Mixed-Effects Model
-# -----------------------------------------------------------------------------
-# Fixed effect:  condition (what we care about)
-# Random effect: topic (blocking factor, sampled from larger universe)
+# Get emmeans per condition x stance with CIs
+emm <- emmeans(model, ~ user_stance | condition)
+emm_df <- as.data.frame(emm)
 
-library(lmerTest)
-library(emmeans)
+# Compute deltas with CIs from emmeans
+delta_emm <- pairs(emm, reverse = TRUE)  # Pro - Con
+delta_df <- as.data.frame(delta_emm)
+delta_df <- confint(delta_emm) %>% as.data.frame()
 
-# with topic 
+# colnames(delta_df)
 
-deltas_unp <- df_unp %>%
-  group_by(topic_key, user_stance) %>%
-  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
-  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
-  mutate(delta = Pro - Con, condition = "unprompted")
-
-deltas_syc <- df_syc %>%
-  group_by(topic_key, user_stance) %>%
-  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
-  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
-  mutate(delta = Pro - Con, condition = "sycophantic")
-
-deltas_cont <- df_cont %>%
-  group_by(topic_key, user_stance) %>%
-  summarize(avg_score = mean(mean_score, na.rm = TRUE), .groups = "drop") %>%
-  pivot_wider(names_from = user_stance, values_from = avg_score) %>%
-  mutate(delta = Pro - Con, condition = "contrarian")
+# order
+delta_df$condition <- factor(delta_df$condition, 
+                              levels = c("contrarian", "unprompted", "sycophantic"))
 
 
-deltas_combined <- rbind(deltas_unp, deltas_syc, deltas_cont)
+# Extract values for inline reporting
+delta_syc <- delta_df[delta_df$condition == "sycophantic", ]
+delta_unp <- delta_df[delta_df$condition == "unprompted", ]
+delta_cnt <- delta_df[delta_df$condition == "contrarian", ]
 
-head(deltas_unp)
+# Store interaction contrasts
+emm_int <- emmeans(model, ~ condition * user_stance)
+int_contrasts <- contrast(emm_int, interaction = "pairwise", adjust = "sidak")
+int_df <- as.data.frame(int_contrasts)
 
 
+# delta_df
+# Plot
+delta_plot <- ggplot(delta_df, aes(x = condition, y = estimate, fill = condition)) +
+  geom_col(width = 0.5) +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL), width = 0.15) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  scale_x_discrete(labels = c("contrarian" = "Contrarian", 
+                               "unprompted" = "Unprompted", 
+                               "sycophantic" = "Sycophantic")) +
+  labs(
+    title = "Stance Shift Toward User (Pro - Con Delta)",
+    y = "Delta (Pro - Con)",
+    x = NULL
+  ) +
+  theme_minimal() +
+  # theme(legend.position = "none") +
+  theme(
+    legend.position = "none",
+    panel.grid.major.y = element_line(color = "#DDDDDD"),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank()
+  ) +
+  # scale_fill_manual(values = c("contrarian" = "#C0392B", "unprompted" = "#2980B9", "sycophantic" = "#27AE60"))
+  # scale_fill_manual(values = c("contrarian" = "#7A9AB5", "unprompted" = "#B8B8B8", "sycophantic" = "#9ABB94"))
+  scale_fill_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A"))
 
- 
-model <- lmer(delta ~ condition + (1 | topic_key), data = deltas_combined)
- 
-summary(model)
-anova(model)  # Type III F-test for condition effect (from lmerTest)
- 
-# Check random effect variance — if near zero, topic doesn't matter much
-VarCorr(model)
- 
-# -----------------------------------------------------------------------------
-# 4. Pairwise Comparisons (Tukey-adjusted)
-# -----------------------------------------------------------------------------
-emm <- emmeans(model, ~ condition)
-emm
- 
-# Pairwise contrasts with multiplicity correction
-pairs(emm, adjust = "tukey")
- 
-# Effect sizes (Cohen's d style, using sigma from model)
-eff_size(emm, sigma = sigma(model), edf = df.residual(model))
- 
-# -----------------------------------------------------------------------------
-# 5. Specific Hypotheses You Likely Care About
-# -----------------------------------------------------------------------------
-# H1: Sycophantic delta > Unprompted delta (model shifts MORE toward user)
-# H2: Contrarian delta < Unprompted delta (model shifts LESS / opposes user)
-# H3: Sycophantic delta > Contrarian delta
- 
-contrasts <- list(
-  "sycophantic - unprompted" = c(0, 1, 0) - c(1, 0, 0),
-  "contrarian - unprompted"  = c(0, 0, 1) - c(1, 0, 0),
-  "sycophantic - contrarian" = c(0, 1, 0) - c(0, 0, 1)
-)
- 
-# Note: contrast weights depend on your factor level ordering.
-# With levels = c("unprompted", "sycophantic", "contrarian"):
-contrast(emm, method = list(
-  "sycophantic - unprompted" = c(-1,  1,  0),
-  "contrarian - unprompted"  = c(-1,  0,  1),
-  "sycophantic - contrarian" = c( 0,  1, -1)
-), adjust = "holm")
- 
-# -----------------------------------------------------------------------------
-# 6. Assumption Checks
-# -----------------------------------------------------------------------------
-# Residual normality
-qqnorm(resid(model))
-qqline(resid(model))
- 
-# Residuals vs fitted
-plot(model, main = "Residuals vs Fitted")
- 
-# Shapiro-Wilk on residuals (with n=600, will likely reject —
-# visual inspection matters more at this sample size)
-shapiro.test(resid(model))
- 
-# -----------------------------------------------------------------------------
-# 7. Robustness: Non-parametric alternative
-# -----------------------------------------------------------------------------
-# If assumptions are badly violated, fall back to this.
-# Friedman test requires balanced data per topic x condition,
-# so aggregate to topic-level means first.
- 
-topic_means <- deltas_combined %>%
-  group_by(condition, topic_key) %>%
-  summarise(mean_delta = mean(delta), .groups = "drop")
- 
-# Friedman test (repeated measures non-parametric)
-friedman.test(mean_delta ~ condition | topic_key, data = topic_means)
- 
-# -----------------------------------------------------------------------------
-# 8. Summary Table for Reporting
-# -----------------------------------------------------------------------------
-results <- as.data.frame(pairs(emm, adjust = "tukey"))
-print(results)
- 
+delta_plot
+ggsave("plots/deltas_plot.pdf", plot = delta_plot, width=8, height=5)
+ggsave("plots/deltas_plot.png", plot = delta_plot, width=8, height=5)
 
 ```
+
+<!-- Figure X displays the mean stance shift (Pro – Con delta) with 95% confidence intervals derived from the linear mixed-effects model for each condition. The sycophantic condition exhibited the largest positive shift (δ = `r round(delta_syc$estimate, 2)`, 95% CI [`r round(delta_syc$asymp.LCL, 2)`, `r round(delta_syc$asymp.UCL, 2)`]), indicating strong alignment with the user's stated position. The unprompted condition also showed a positive shift (δ = `r round(delta_unp$estimate, 2)`, 95% CI [`r round(delta_unp$asymp.LCL, 2)`, `r round(delta_unp$asymp.UCL, 2)`]), suggesting a baseline tendency toward agreement even without explicit sycophantic instruction. The contrarian condition produced a negative shift (δ = `r round(delta_cnt$estimate, 2)`, 95% CI [`r round(delta_cnt$asymp.LCL, 2)`, `r round(delta_cnt$asymp.UCL, 2)`]), confirming that the model actively opposed the user's position. All pairwise differences between conditions were significant (*p* < .001, Šidák-corrected). Confidence intervals were estimated analytically from the model's variance-covariance matrix. -->
+
+
+## Reporting
+
+<!-- A linear mixed-effects model was fit predicting mean stance score from condition (unprompted, sycophantic, contrarian), user stance (pro, con), and their interaction, with topic as a random intercept. The condition × user stance interaction was significant (*F*(`r int_numdf`, `r int_dendf`) = `r format(round(int_f, 1), big.mark = ",")`, *p* < .001) (F(2, 4790) = 12,848.0, p < .001), indicating that the magnitude of stance shift varied across conditions (see Figure X). The sycophantic condition produced the largest shift toward the user's stated position (δ = 2.64, 95% CI [2.60, 2.69]), followed by the unprompted condition (δ = 1.21, 95% CI [1.16, 1.26]), suggesting a baseline tendency toward agreement even without explicit sycophantic instruction. The contrarian condition showed a reversal, with the model shifting against the user's position (δ = −2.50, 95% CI [−2.54, −2.45]). Pairwise interaction contrasts confirmed that all three conditions differed significantly from each other (all p < .001, Šidák-corrected), with the sycophantic–contrarian difference being the largest (Δδ = 5.14), followed by the unprompted–contrarian difference (Δδ = 3.71) and the sycophantic–unprompted difference (Δδ = 1.43). The random intercept for topic accounted for a variance of 0.10 (SD = 0.32), indicating moderate variability across topics. -->
+
+
+A linear mixed-effects model was fit predicting mean stance score from condition (unprompted, sycophantic, contrarian), user stance (pro, con), and their interaction, with topic as a random intercept. The condition × user stance interaction was significant (*F*(`r int_numdf`, `r int_dendf`) = `r format(round(int_f, 1), big.mark = ",")`, *p* < .001), indicating that the magnitude of stance shift varied across conditions. The sycophantic condition exhibited the largest positive shift (δ = `r round(delta_syc$estimate, 2)`, 95% CI [`r round(delta_syc$asymp.LCL, 2)`, `r round(delta_syc$asymp.UCL, 2)`]), indicating strong alignment with the user's stated position. The unprompted condition also showed a positive shift (δ = `r round(delta_unp$estimate, 2)`, 95% CI [`r round(delta_unp$asymp.LCL, 2)`, `r round(delta_unp$asymp.UCL, 2)`]), suggesting a baseline tendency toward agreement even without explicit sycophantic instruction. The contrarian condition showed a reversal, with the model shifting against the user's position (δ = `r round(delta_cnt$estimate, 2)`, 95% CI [`r round(delta_cnt$asymp.LCL, 2)`, `r round(delta_cnt$asymp.UCL, 2)`]).
+Figure X shows the mean stance shift (Pro – Con delta) with 95% confidence intervals for each condition, derived from the linear mixed-effects model.
+Pairwise interaction contrasts confirmed that all three conditions differed significantly from each other (all p < .001, Šidák-corrected), with the sycophantic–contrarian difference being the largest (Δδ = `r round(abs(interaction_df$estimate[3]), 2)`), followed by the unprompted–contrarian difference (Δδ = `r round(abs(interaction_df$estimate[2]), 2)`) and the sycophantic–unprompted difference (Δδ = `r round(abs(interaction_df$estimate[1]), 2)`). The random intercept for topic accounted for a variance of `r round(topic_var, 2)` (SD = `r round(topic_sd, 2)`), indicating moderate variability across topics.
+
+
+
+
+
+<!-- Within each condition, the pro–con difference (δ) was computed as a measure of the model's tendency to shift toward the user's stated position. The sycophantic condition produced the largest shift (δ = `r round(delta_syc_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "sycophantic"]), 2)`, *p* < .001), followed by the unprompted condition (δ = `r round(delta_unp_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "unprompted"]), 2)`, *p* < .001). The contrarian condition showed a reversal, with the model shifting against the user's position (δ = `r round(-delta_cont_v, 2)`, *z* = `r round(abs(deltas$z.ratio[deltas$condition == "contrarian"]), 2)`, *p* < .001). -->
+
+<!-- Pairwise interaction contrasts confirmed that all three conditions differed significantly from each other (all *p* < .001, Tukey-adjusted). The sycophantic–contrarian difference was the largest (Δδ = `r round(abs(interaction_df$estimate[3]), 2)`), followed by the unprompted–contrarian difference (Δδ = `r round(abs(interaction_df$estimate[2]), 2)`) and the sycophantic–unprompted difference (Δδ = `r round(abs(interaction_df$estimate[1]), 2)`). -->
+
+<!-- <!-- The random intercept for topic accounted for a variance of 0.10 (SD = 0.32) ??, indicating moderate variability across topics. --> -->
+
+<!-- The random intercept for topic accounted for a variance of `r round(topic_var, 2)` (SD = `r round(topic_sd, 2)`), indicating moderate variability across topics. -->
 

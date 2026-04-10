@@ -313,7 +313,7 @@ p
 # ── Save ──────────────────────────────────────────────────────────────────────
 
 ggsave(
-  "plots/confusion_matrix.png",
+  "plots/confusion_matrix.pdf",
   plot   = p,
   width  = 7,
   height = 6.5,
