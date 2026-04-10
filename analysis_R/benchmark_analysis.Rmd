@@ -23,11 +23,14 @@ library(tidyverse)
 library(ggplot2)
 library(knitr)
 library(kableExtra)
-library(boot)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+# library(boot)
 ```
 
 
-# Color
+# Colors
 
 ```{r}
 colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
@@ -311,9 +314,7 @@ kable(comparison, caption = "Mean Scores by Stance: Unprompted vs. Sycophantic")
 # Delta Comparison
 
 ```{r}
-library(lme4)
-library(lmerTest)
-library(emmeans)
+
 
 # Combine all conditions
 df_all <- bind_rows(

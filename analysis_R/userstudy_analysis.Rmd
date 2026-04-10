@@ -24,7 +24,16 @@ library(tidyverse)
 library(ggplot2)
 library(knitr)
 library(kableExtra)
-library(boot)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+
+```
+# Colors
+
+```{r}
+colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
+
 ```
 
 # Data Loading & Structuring
@@ -38,13 +47,17 @@ df_u_raw <- as_tibble(user_study_raw) %>%
   unnest(classified_response) %>% 
   select(case_id, condition, topic, pre_opinion, turn, role, mean_score)
 
+
+
+
+
 df_u_raw <- df_u_raw %>%
   mutate(
     user_stance = factor(case_when(
-      pre_opinion == 4 ~ "neutral",
-      pre_opinion > 4 ~ "pro",
-      pre_opinion < 4 ~ "con",
-    ), levels = c("con", "neutral", "pro"))
+      pre_opinion == 4 ~ "Neutral",
+      pre_opinion > 4 ~ "Pro",
+      pre_opinion < 4 ~ "Con",
+    ), levels = c("Con", "Neutral", "Pro"))
   ) 
 
 
@@ -62,37 +75,37 @@ df_u_cont <- df_u_raw %>%
 
 
 # Assistant turns
-# & remove neutral
+# & remove Neutral
 
 df_u_unp_assistant <- df_u_unp %>% 
   filter(role == "assistant") %>% 
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 df_u_syc_assistant <- df_u_syc %>% 
   filter(role == "assistant") %>% 
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 df_u_cont_assistant <- df_u_cont %>% 
   filter(role == "assistant") %>% 
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 
 
 # User turns
-# & remove neutral
+# & remove Neutral
 
 
 df_u_unp_user <- df_u_unp %>% 
   filter(role == "user") %>%
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 df_u_syc_user <- df_u_syc %>% 
   filter(role == "user") %>%
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 df_u_cont_user <- df_u_cont %>% 
   filter(role == "user") %>%
-  filter(user_stance != "neutral") 
+  filter(user_stance != "Neutral") 
 
 
 ```
@@ -102,15 +115,19 @@ df_u_cont_user <- df_u_cont %>%
 
 ```{r}
 
-unp_plot <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+unp_plot_assistant <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
+    # title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -121,15 +138,19 @@ unp_plot <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, color = use
   theme(legend.position = "bottom") 
 
 
-syc_plot <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+syc_plot_assistant <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of Model Stance over 8 Turns (Sycophantic Condition)",
+    # title = "Evolution of Model Stance over 8 Turns (Sycophantic Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -139,15 +160,19 @@ syc_plot <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, color = use
   theme_minimal() +
   theme(legend.position = "bottom") 
 
-cont_plot <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+cont_plot_assistant <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of Model Stance over 8 Turns (Contrarian Condition)",
+    # title = "Evolution of Model Stance over 8 Turns (Contrarian Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -157,14 +182,118 @@ cont_plot <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score, color = u
   theme_minimal() +
   theme(legend.position = "bottom") 
 
-unp_plot
-syc_plot
-cont_plot
-# ggsave("user_study_unprompted_plot.pdf", plot = unp_plot, width=8, height=5)
-# ggsave("user_study_sycophantic_plot.pdf", plot = syc_plot, width=8, height=5)
-# ggsave("user_study_contrarian_plot.pdf", plot = cont_plot, width=8, height=5)
+unp_plot_assistant
+syc_plot_assistant
+cont_plot_assistant
+ggsave("plots/user_study_assistant_unprompted_plot.pdf", plot = unp_plot_assistant, width=8, height=5)
+ggsave("plots/user_study_assistant_sycophantic_plot.pdf", plot = syc_plot_assistant, width=8, height=5)
+ggsave("plots/user_study_assistant_contrarian_plot.pdf", plot = cont_plot_assistant, width=8, height=5)
 
 ```
+
+
+## Assistant Delta Comparisons
+
+## Clean Data
+```{r}
+
+
+# Combine all conditions
+df_all_assistant <- bind_rows(
+  df_u_unp_assistant %>% mutate(condition = "unprompted"),
+  df_u_syc_assistant %>% mutate(condition = "sycophantic"),
+  df_u_cont_assistant %>% mutate(condition = "contrarian")
+)
+
+# remove turn 0
+df_all_assistant <- df_all_assistant %>%
+  filter(turn!=0)
+
+df_all_assistant
+
+df_all_assistant$condition <- factor(df_all_assistant$condition,
+                           levels = c("unprompted", "sycophantic", "contrarian"))
+df_all_assistant$user_stance <- factor(df_all_assistant$user_stance)
+df_all_assistant$topic <- factor(df_all_assistant$topic)
+
+```
+
+
+## Models
+```{r}
+
+
+
+# The interaction is your delta
+model_assistant <- lmer(mean_score ~ condition * user_stance + (1 | topic), data = df_all_assistant)
+
+summary(model_assistant)
+aov_res_assistant <- anova(model_assistant)
+
+aov_res_assistant
+
+vc_a <- as.data.frame(VarCorr(model_assistant))
+topic_var_a <- vc_a$vcov[vc_a$grp == "topic"]
+topic_sd_a <- vc_a$sdcor[vc_a$grp == "topic"]
+
+int_numdf_a <- aov_res_assistant["condition:user_stance", "NumDF"]
+int_dendf_a <- aov_res_assistant["condition:user_stance", "DenDF"]
+int_f_a <- aov_res_assistant["condition:user_stance", "F value"]
+
+# pairwise comparison
+
+emm_a <- emmeans(model_assistant, ~ user_stance | condition)
+# The deltas
+# pairs(emm)  # pro - con within each condition
+deltas_a <- as.data.frame(pairs(emm_a))
+
+# Compare deltas across conditions
+emm_int_a <- emmeans(model_assistant, ~ condition * user_stance)
+interaction_contrasts_a <- contrast(emm_int_a, interaction = "pairwise", adjust = "tukey")
+# contrast(emm_int, interaction = "pairwise", adjust = "tukey")
+interaction_df_a <- as.data.frame(interaction_contrasts_a)
+
+
+interaction_contrasts_a
+
+# Extract specific values for inline reporting
+delta_unp_a_v <- abs(deltas_a$estimate[deltas_a$condition == "unprompted"])
+delta_syc_a_v <- abs(deltas_a$estimate[deltas_a$condition == "sycophantic"])
+delta_cont_a_v <- abs(deltas_a$estimate[deltas_a$condition == "contrarian"])
+
+
+
+# CIs for inline reporting
+delta_emm_a <- pairs(emm_a, reverse = TRUE)
+delta_df_a <- as.data.frame(confint(delta_emm_a))
+
+delta_syc_a <- delta_df_a[delta_df_a$condition == "sycophantic", ]
+delta_unp_a <- delta_df_a[delta_df_a$condition == "unprompted", ]
+delta_cnt_a <- delta_df_a[delta_df_a$condition == "contrarian", ]
+
+# Unprompted significance test
+coefs_a <- summary(model_assistant)$coefficients
+unp_t_a <- coefs_a["user_stancePro", "t value"]
+unp_p_a <- coefs_a["user_stancePro", "Pr(>|t|)"]
+
+```
+
+
+A linear mixed-effects model was fit to the assistant responses of the real-world conversation data, predicting mean stance score from condition, user stance, and their interaction, with topic as a random intercept. The condition × user stance interaction was significant (*F*(`r int_numdf_a`, `r round(int_dendf_a, 1)`) = `r round(int_f_a, 1)`,*p* < .001), indicating that stance shift varied across conditions. 
+However, unlike the benchmark results, the unprompted condition did not show a significant pro–con difference (δ = `r round(delta_unp_a$estimate, 2)`, 95% CI [`r round(delta_unp_a$lower.CL, 2)`, `r round(delta_unp_a$upper.CL, 2)`], *p* = `r round(unp_p_a, 3)`), suggesting that baseline sycophancy was not evident in real-world multi-turn conversations. The sycophantic condition produced a significant positive shift (δ = `r round(delta_syc_a$estimate, 2)`, 95% CI [`r round(delta_syc_a$lower.CL, 2)`, `r round(delta_syc_a$upper.CL, 2)`]), and the contrarian condition produced a significant negative shift (δ = `r round(delta_cnt_a$estimate, 2)`, 95% CI [`r round(delta_cnt_a$lower.CL, 2)`, `r round(delta_cnt_a$upper.CL, 2)`]). Pairwise interaction contrasts confirmed that all three conditions differed significantly from each other (all *p* < .001, Šidák-corrected). The random intercept for topic accounted for a variance of `r round(topic_var_a, 2)` (SD = `r round(topic_sd_a, 2)`).
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -178,10 +307,14 @@ unp_plot_user <- ggplot(df_u_unp_user, aes(x = turn, y = mean_score, color = use
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of User Stance over 8 Turns (Unprompted Condition)",
+    # title = "Evolution of User Stance over 8 Turns (Unprompted Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -197,10 +330,14 @@ syc_plot_user <- ggplot(df_u_syc_user, aes(x = turn, y = mean_score, color = use
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+  
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of User Stance over 8 Turns (Sycophantic Condition)",
+    # title = "Evolution of User Stance over 8 Turns (Sycophantic Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -215,10 +352,14 @@ cont_plot_user <- ggplot(df_u_cont_user, aes(x = turn, y = mean_score, color = u
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
+    
+  scale_color_manual(values = colors) +
+  scale_fill_manual(values = colors) +
+  
   scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
   scale_x_continuous(limits = c(1, 8)) +
   labs(
-    title = "Evolution of User Stance over 8 Turns (Contrarian Condition)",
+    # title = "Evolution of User Stance over 8 Turns (Contrarian Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
     color = "User Stance", 
     fill = "User Stance",
@@ -231,9 +372,10 @@ cont_plot_user <- ggplot(df_u_cont_user, aes(x = turn, y = mean_score, color = u
 unp_plot_user
 syc_plot_user
 cont_plot_user
-# ggsave("user_study_unprompted_plot_user.pdf", plot = unp_plot, width=8, height=5)
-# ggsave("user_study_sycophantic_plot_user.pdf", plot = syc_plot, width=8, height=5)
-# ggsave("user_study_contrarian_plot_user.pdf", plot = cont_plot, width=8, height=5)
+
+ggsave("plots/user_study_user_unprompted.pdf", plot = unp_plot_user, width=8, height=5)
+ggsave("plots/user_study_user_sycophantic_plot.pdf", plot = syc_plot_user, width=8, height=5)
+ggsave("plots/user_study_user_contrarian_plot.pdf", plot = cont_plot_user, width=8, height=5)
 
 ```
 
