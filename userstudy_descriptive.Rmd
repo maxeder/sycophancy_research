@@ -236,3 +236,21 @@ df %>%
   kable_styling(bootstrap_options = "striped")
 ```
 
+
+
+
+# AI Literacy & Usage
+
+```{r}
+
+# ai_literacy, ai_usage
+mean(df$ai_literacy)
+sd(df$ai_literacy)
+mean(df$ai_usage)
+sd(df$ai_usage)
+
+
+hist(df$ai_literacy)
+hist(df$ai_usage)
+```
+

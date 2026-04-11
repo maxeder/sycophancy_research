@@ -24,6 +24,7 @@ library(knitr)
 library(kableExtra)
 library(lme4)
 library(emmeans)
+library(psych)
 ```
 
 # Data Loading & Cleaning
@@ -40,8 +41,8 @@ glimpse(raw)
 
 ```{r clean-data}
 df <- raw %>%
-  # keep only finished participants
   filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
   # drop admin / test entries
   filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
   mutate(
@@ -97,6 +98,39 @@ df <- df %>%
 ```
 
 
+
+
+
+# Cronbach's Alpha for Experience Scales
+
+```{r}
+
+scale_items <- list(
+   competence  = c("competence_01", "competence_02", "competence_03"),
+    trust       = c("trust_01",       "trust_02",       "trust_03"),
+    satisfaction = paste0("satisfaction_0", 1:5),
+    sycophancy  = c("sycophancy_01",  "sycophancy_02"),
+    credibility = c("credibility_01", "credibility_02", "credibility_03"),
+    continuance = c("continuance_01", "continuance_02")
+)
+
+# Run alpha for each scale
+# alphas <- lapply(scale_items, function(vars) {
+#   items <- df %>% select(all_of(vars))
+#   psych::alpha(items)
+# })
+
+# Inspect e.g.:
+# alphas$competence
+
+
+alpha_values <- sapply(scale_items, function(vars) {
+  items <- df %>% select(all_of(vars))
+  psych::alpha(items)$total$raw_alpha
+})
+
+alpha_values
+```
 
 # Opinion Change
 
@@ -265,7 +299,7 @@ df_out <- df %>%
 df_out %>%
   ggplot(aes(x = model_condition, y = value, fill = model_condition)) +
   geom_boxplot(alpha = 0.7, width = 0.4) +
-  geom_jitter(width = 0.12, size = 1.5, alpha = 0.6) +
+  geom_jitter(width = 0.12, size = 1.5, alpha = 0.3) +
   scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
   facet_wrap(~outcome, scales = "free_y") +
   labs(title = "Outcome measures by condition",

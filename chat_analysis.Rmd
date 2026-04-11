@@ -62,6 +62,9 @@ chats <- chats %>%
     topic     = factor(topic)
   )
 
+
+mean(chats$n_turns)
+
 # glimpse(chats %>% select(-transcript))
 ```
 
@@ -140,6 +143,12 @@ chats %>%
 
 
 
+
+
+```{r}
+
+
+```
 
 
 
