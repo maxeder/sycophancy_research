@@ -99,7 +99,7 @@ df <- df %>%
 ```
 
 
-
+------------------------------------------------------------------------------------------------------------------------------------
 
 
 # Cronbach's Alpha for Experience Scales
@@ -132,6 +132,13 @@ alpha_values <- sapply(scale_items, function(vars) {
 
 alpha_values
 ```
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
 
 # Opinion Change
 
@@ -219,7 +226,7 @@ cat(sprintf("\nKruskal-Wallis: chi²(%.0f) = %.2f, p = %.3f\n",
 # Confidence Change
 
 
-## Overall coonfidence change
+## Overall confidence change
 
 
 ```{r}
@@ -234,6 +241,8 @@ mean(df$post_confidence - df$pre_confidence)
 # Effect size (rank-biserial correlation)
 rank_biserial(df$post_confidence, df$pre_confidence, paired = TRUE)
 ```
+A Wilcoxon signed-rank test indicated that post-interaction confidence scores were significantly higher than pre-interaction scores (V = 730.5, p = .022, r = 0.32).
+
 
 
 ## Pre–Post within Each Condition
@@ -386,7 +395,14 @@ round(cor_mat, 2) %>%
   kable_styling(bootstrap_options = "striped")
 ```
 
-# 10. Qualitative Results
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# Qualitative Results
 
 ## Randomized Qualitative Experience Question
 
