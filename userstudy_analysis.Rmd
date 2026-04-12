@@ -207,15 +207,18 @@ df %>%
 
 ## ANOVA / Kruskal-Wallis on Opinion Change
 
-```{r att-change-anova}
+```{r}
 
-aov_res <- aov(opinion_change ~ model_condition, data = df_opinion_change)
-print(summary(aov_res))
+# hist(df$opinion_change)
+
+# ANOVA
+aov_op <- aov(opinion_change ~ model_condition, data = df)
+print(summary(aov_op))
 
 # Non-parametric alternative given small N
-kw <- kruskal.test(opinion_change ~ model_condition, data = df_opinion_change)
-cat(sprintf("\nKruskal-Wallis: chi²(%.0f) = %.2f, p = %.3f\n",
-            kw$parameter, kw$statistic, kw$p.value))
+kw_op <- kruskal.test(opinion_change ~ model_condition, data = df)
+kw_op
+
 ```
 
 
@@ -290,15 +293,23 @@ df %>%
   theme(legend.position = "none")
 ```
 
-## Anova
+## ANOVA / Kruskal-Wallis on Confidence Change
 
 ```{r}
-# overall test
-aov_model <- aov(confidence_change ~ model_condition, data = df)
-summary(aov_model)
+
+# hist(df$confidence_change)
+
+# ANOVA
+aov_conf <- aov(confidence_change ~ model_condition, data = df)
+print(summary(aov_conf))
+
+# Kruskal-Wallis 
+kw_conf <- kruskal.test(confidence_change ~ model_condition, data = df_opinion_change)
+print(kw_conf)
+
 
 # pairwise follow-ups if significant
-TukeyHSD(aov_model)
+# TukeyHSD(aov_model)
 ```
 
 
@@ -338,7 +349,8 @@ df_out %>%
   geom_boxplot(width = 0.4, , outlier.color = "grey50", outlier.size = 0.7) +
   
   # add mean
-  stat_summary(fun = mean, geom = "point", shape = 18, size = 3) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
   # suppress boxplot outliers when using jitter plot
   # geom_boxplot(width = 0.4, outlier.shape = NA) +
   # geom_jitter(width = 0.12, size = 1.5, alpha = 0.3) +
@@ -349,8 +361,12 @@ df_out %>%
   labs(title = "Outcome measures by condition",
        x = "Condition", y = "Score", fill = "Condition") +
   theme_bw(base_size = 11) +
-  theme(axis.text.x = element_text(angle = 25, hjust = 1),
-        legend.position = "none")
+  theme(
+    axis.text.x = element_text(angle = 25, hjust = 1),
+    legend.position = "none",
+    strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 1),
+    strip.text = element_text(size = 10)
+  )
 ```
 
 ```{r outcomes-kw}
