@@ -190,7 +190,7 @@ for (cond in levels(df$model_condition)) {
 ```{r att-change-bar, fig.width=6, fig.height=4}
 df %>%
   mutate(
-    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+    model_condition = factor(model_condition, levels = c("Contrarian","Unprompted", "Sycophantic"))
   ) %>%
   ggplot(aes(x = model_condition, y = opinion_change, fill = model_condition)) +
   geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
@@ -687,7 +687,9 @@ df_out <- df %>%
 ```
 
 ```{r outcomes-plot, fig.width=9, fig.height=6}
-df_out %>%
+
+# Outcome measures by condition
+exp_plots <- df_out %>%
     mutate(
     model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic")),
     outcome = tools::toTitleCase(outcome)
@@ -706,8 +708,7 @@ df_out %>%
   # scale_fill_manual(values = c("firebrick", "steelblue", "firebrick")) +
   scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
   facet_wrap(~outcome, scales = "free_y") +
-  labs(title = "Outcome measures by condition",
-       x = "Condition", y = "Score", fill = "Condition") +
+  labs(x = "Condition", y = "Likert Scale Rating (1-5)", fill = "Condition") +
   theme_bw(base_size = 11) +
   theme(
     axis.text.x = element_text(angle = 25, hjust = 1),
@@ -715,6 +716,12 @@ df_out %>%
     strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 1),
     strip.text = element_text(size = 10)
   )
+
+exp_plots
+
+
+ggsave(file.path(output_dir, "experience_plots.pdf"), plot = exp_plots, width=8, height=5)
+ggsave(file.path(output_dir, "experience_plots.png"), plot = exp_plots, width=8, height=5)
 ```
 
 ```{r outcomes-kw}
@@ -828,6 +835,9 @@ round(cor_mat, 2) %>%
   kable(caption = "Spearman correlations among outcome measures") %>%
   kable_styling(bootstrap_options = "striped")
 ```
+
+
+
 
 
 

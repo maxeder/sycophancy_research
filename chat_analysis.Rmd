@@ -26,6 +26,8 @@ library(tidyverse)
 library(jsonlite)
 library(knitr)
 library(kableExtra)
+library(dunn.test)
+library(rstatix)
 ```
 
 # Data Loading
@@ -94,15 +96,124 @@ chats %>%
 # Turn Count Analysis
 
 ```{r turns-by-condition, fig.cap="Number of user turns by condition"}
+chats <- chats %>%
+  mutate(
+    condition = factor(condition, levels = c("contrarian","unprompted", "sycophantic"))
+  )
+
 ggplot(chats, aes(x = condition, y = n_turns, fill = condition)) +
   geom_boxplot(alpha = 0.7) +
   geom_jitter(width = 0.15, alpha = 0.4, size = 1.5) +
-  scale_fill_brewer(palette = "Set2") +
+    scale_color_manual(values = colors) +
+ scale_fill_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A")) +
   labs(x = "Condition", y = "Number of user turns",
        title = "User turns per conversation by condition") +
   theme_minimal() +
+    scale_x_discrete(labels = c("contrarian" = "Contrarian", "unprompted" = "Unprompted", "sycophantic" = "Sycophantic")) +
   theme(legend.position = "none")
 ```
+
+
+```{r}
+
+chats <- chats %>%
+  mutate(
+    condition = factor(condition, levels = c("contrarian","unprompted", "sycophantic"))
+  )
+
+
+# Test
+kw <-kruskal.test(n_turns ~ condition, data = chats)
+
+kw
+
+n <- nrow(chats)
+epsilon_sq <- kw$statistic / (n - 1)
+epsilon_sq
+# Pairwise follow-up
+dunn.test(chats$n_turns, chats$condition, method = "bh")
+
+# Visualisation
+
+# mean with cis
+ggplot(chats, aes(x = condition, y = n_turns,  color = condition)) +
+  stat_summary(fun = mean, geom = "point", size = 3.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
+  labs(x = "Condition", y = "Number of Turns") +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5, shape = 16) +
+  scale_color_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A")) +
+  theme_minimal() +
+  coord_cartesian(ylim = c(0, 10)) +
+  scale_x_discrete(labels = c("contrarian" = "Contrarian", "unprompted" = "Unprompted", "sycophantic" = "Sycophantic")) +
+  theme(legend.position = "none")
+```
+
+
+
+
+# Interaction Time
+
+```{r}
+# Load user study sosci dataset
+
+
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+df <- raw %>%
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("Unprompted", "Sycophantic", "Contrarian")),
+    topic  = factor(topic)
+  )
+
+
+
+df <- df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian","Unprompted", "Sycophantic"))
+  )
+
+df$model_condition
+df$TIME005 <- as.numeric(df$TIME005)
+
+# Test
+kw <- kruskal.test(TIME005 ~ model_condition, data = df)
+kw
+n <- nrow(df)
+n
+epsilon_sq <- kw$statistic / (n - 1)
+epsilon_sq
+
+# Pairwise follow-up
+dunn.test(df$TIME005, df$model_condition, method = "holm")
+
+# Visualisation
+
+# mean with cis
+ggplot(df, aes(x = model_condition, y = TIME005,  color = model_condition)) +
+  stat_summary(fun = mean, geom = "point", size = 3.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
+  labs(x = "Condition", y = "Interaction Time in Seconds") +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5, shape = 16) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  theme_minimal() +
+  # coord_cartesian(ylim = c(0, 10)) +
+  theme(legend.position = "none")
+
+
+
+```
+
+
+
 
 ```{r turns-anova}
 turns_aov <- aov(n_turns ~ condition, data = chats)
