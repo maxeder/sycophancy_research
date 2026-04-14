@@ -110,30 +110,30 @@ df <- df %>%
 
 
 
-## Model
+# Opinion Extremity
 
 ```{r}
 
-# Data Prep
-
-df$condition <- relevel(factor(df$model_condition), ref = "Unprompted")
-df$extremityPre <-  abs(4 - as.numeric(df$opinion_pre))
-df$extremityPost  <-  abs(4 - as.numeric(df$opinion_post))
-
-
-# OLS
-
-fit_ols <- function(dat, formula) {
-  m <- lm(formula, data = dat)
-  coef_tab <- summary(m)$coefficients
-  ci_tab <- confint(m)
-  combined <- cbind(coef_tab, ci_tab)
-  em <- emmeans(m, ~ condition, data = dat)
-  list(model = m, coef_table = combined, emmeans = em)
-}
-
-res <- fit_ols(df, extremityPost ~ condition + extremityPre)
-
+# # Data Prep
+# 
+# df$condition <- relevel(factor(df$model_condition), ref = "Unprompted")
+# df$extremityPre <-  abs(4 - as.numeric(df$opinion_pre))
+# df$extremityPost  <-  abs(4 - as.numeric(df$opinion_post))
+# 
+# 
+# # OLS
+# 
+# fit_ols <- function(dat, formula) {
+#   m <- lm(formula, data = dat)
+#   coef_tab <- summary(m)$coefficients
+#   ci_tab <- confint(m)
+#   combined <- cbind(coef_tab, ci_tab)
+#   em <- emmeans(m, ~ condition, data = dat)
+#   list(model = m, coef_table = combined, emmeans = em)
+# }
+# 
+# res <- fit_ols(df, extremityPost ~ condition + extremityPre)
+# 
 
 # # Contrasts
 # 
@@ -173,6 +173,32 @@ res <- fit_ols(df, extremityPost ~ condition + extremityPre)
 # 
 
 
+
+
+
+# Data Prep
+
+df$condition <- relevel(factor(df$model_condition), ref = "Unprompted")
+df$extremityPre <-  abs(4 - as.numeric(df$opinion_pre))
+df$extremityPost  <-  abs(4 - as.numeric(df$opinion_post))
+
+
+# OLS
+
+fit_ols <- function(dat, formula) {
+  m <- lm(formula, data = dat)
+  coef_tab <- summary(m)$coefficients
+  ci_tab <- confint(m)
+  combined <- cbind(coef_tab, ci_tab)
+  em <- emmeans(m, ~ condition)
+  list(model = m, coef_table = combined, emmeans = em)
+}
+
+res <- fit_ols(df, extremityPost ~ condition + extremityPre)
+
+res
+
+
 # Plot
 
 coef_df <- as.data.frame(res$coef_table) |>
@@ -186,21 +212,89 @@ coef_df <- as.data.frame(res$coef_table) |>
     term_label = factor(term_label, levels = c("Sycophantic", "Contrarian"))
   )
 
-ggplot(coef_df, aes(x = Estimate, y = term_label)) +
+ext_plot <- ggplot(coef_df, aes(x = Estimate, y = term_label, color = term_label)) +
   geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.6) +
   geom_point(size = 3) +
   geom_errorbarh(aes(xmin = `2.5 %`, xmax = `97.5 %`), height = 0.15) +
-  labs(title = "Opinion Extremity", x = "Change in Extremity (0-3 Scale)", y = NULL) +
+  labs(x = "Change in Opinion Extremity (0-3 Scale)", y = NULL) +
+  scale_x_continuous(limits=c(-1, 1)) +
+  scale_color_manual(values = c("Sycophantic" = "#82B88A",
+                                 "Contrarian" = "#D4807A")) +
   theme_apa() +
-  theme(plot.title = element_text(face = "bold", hjust = 0.5))
-
+  theme(
+    panel.grid.major.x = element_line(color = "grey90"), 
+    panel.grid.minor.x = element_line(color = "grey90"),
+    legend.position = "none",
+  )
+ext_plot
+ggsave(file.path(output_dir, "opinion_extremity.pdf"), plot = ext_plot, width=8, height=5)
+ggsave(file.path(output_dir, "opinion_extremity.png"), plot = ext_plot, width=8, height=5)
 ```
 
 
-## plot
+
+
+
+
+# Confidence Extremity 
+
 
 ```{r}
 
-```
 
+
+# Data Prep
+
+df$condition <- relevel(factor(df$model_condition), ref = "Unprompted")
+df$extremityConfPre <-  abs(4 - as.numeric(df$pre_confidence))
+df$extremityConfPost  <-  abs(4 - as.numeric(df$post_confidence))
+
+
+# OLS
+
+fit_ols <- function(dat, formula) {
+  m <- lm(formula, data = dat)
+  coef_tab <- summary(m)$coefficients
+  ci_tab <- confint(m)
+  combined <- cbind(coef_tab, ci_tab)
+  em <- emmeans(m, ~ condition)
+  list(model = m, coef_table = combined, emmeans = em)
+}
+
+res_conf <- fit_ols(df, extremityConfPost ~ condition + extremityConfPre)
+
+res_conf
+
+
+# Plot
+
+coef_conf_df <- as.data.frame(res_conf$coef_table) |>
+  tibble::rownames_to_column("term") |>
+  filter(grepl("^condition", term)) |>
+  mutate(
+    term_label = recode(term,
+      "conditionSycophantic"    = "Sycophantic",
+      "conditionContrarian" = "Contrarian"
+    ),
+    term_label = factor(term_label, levels = c("Sycophantic", "Contrarian"))
+  )
+
+ext_plot <- ggplot(coef_conf_df, aes(x = Estimate, y = term_label, color = term_label)) +
+  geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.6) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = `2.5 %`, xmax = `97.5 %`), height = 0.15) +
+  labs(x = "Change in Opinion Extremity (0-3 Scale)", y = NULL) +
+  scale_x_continuous(limits=c(-1.5, 1.5)) +
+  scale_color_manual(values = c("Sycophantic" = "#82B88A",
+                                 "Contrarian" = "#D4807A")) +
+  theme_apa() +
+  theme(
+    panel.grid.major.x = element_line(color = "grey90"), 
+    panel.grid.minor.x = element_line(color = "grey90"),
+    legend.position = "none",
+  )
+ext_plot
+ggsave(file.path(output_dir, "confidence_extremity.pdf"), plot = ext_plot, width=8, height=5)
+ggsave(file.path(output_dir, "confidence_extremity.png"), plot = ext_plot, width=8, height=5)
+```
 
