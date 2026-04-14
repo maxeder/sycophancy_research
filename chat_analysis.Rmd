@@ -136,7 +136,7 @@ dunn.test(chats$n_turns, chats$condition, method = "bh")
 # Visualisation
 
 # mean with cis
-ggplot(chats, aes(x = condition, y = n_turns,  color = condition)) +
+turns_plot <- ggplot(chats, aes(x = condition, y = n_turns,  color = condition)) +
   stat_summary(fun = mean, geom = "point", size = 3.5) +
   stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
   labs(x = "Condition", y = "Number of Turns") +
@@ -144,8 +144,13 @@ ggplot(chats, aes(x = condition, y = n_turns,  color = condition)) +
   scale_color_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A")) +
   theme_minimal() +
   coord_cartesian(ylim = c(0, 10)) +
+  scale_y_continuous(breaks = seq(0, 10, by = 2)) +
   scale_x_discrete(labels = c("contrarian" = "Contrarian", "unprompted" = "Unprompted", "sycophantic" = "Sycophantic")) +
   theme(legend.position = "none")
+
+turns_plot
+ggsave(file.path(output_dir, "turns_plot.pdf"), plot = turns_plot, width=8, height=5)
+ggsave(file.path(output_dir, "turns_plot.png"), plot = turns_plot, width=8, height=5)
 ```
 
 
@@ -198,7 +203,7 @@ dunn.test(df$TIME005, df$model_condition, method = "holm")
 # Visualisation
 
 # mean with cis
-ggplot(df, aes(x = model_condition, y = TIME005,  color = model_condition)) +
+time_plot <- ggplot(df, aes(x = model_condition, y = TIME005,  color = model_condition)) +
   stat_summary(fun = mean, geom = "point", size = 3.5) +
   stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
   labs(x = "Condition", y = "Interaction Time in Seconds") +
@@ -209,6 +214,9 @@ ggplot(df, aes(x = model_condition, y = TIME005,  color = model_condition)) +
   theme(legend.position = "none")
 
 
+time_plot
+ggsave(file.path(output_dir, "time_plot.pdf"), plot = time_plot, width=8, height=5)
+ggsave(file.path(output_dir, "time_plot.png"), plot = time_plot, width=8, height=5)
 
 ```
 
