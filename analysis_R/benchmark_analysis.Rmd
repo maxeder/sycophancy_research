@@ -124,6 +124,7 @@ unp_plot
 ggsave("plots/unprompted_plot.pdf", plot = unp_plot, width=8, height=5)
 ggsave("plots/unprompted_plot.png", plot = unp_plot, width=8, height=5)
 ggsave(file.path(output_dir, "benchmark_unprompted_plot.pdf"), plot = unp_plot, width=8, height=5)
+ggsave(file.path(output_dir, "benchmark_unprompted_plot.png"), plot = unp_plot, width=8, height=5)
 
 ```
 
@@ -176,6 +177,7 @@ syc_plot <- ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fi
 ggsave("plots/sycophantic_plot.pdf", plot = syc_plot, width=8, height=5)
 ggsave("plots/sycophantic_plot.png", plot = syc_plot, width=8, height=5)
 ggsave(file.path(output_dir, "benchmark_sycophantic_plot.pdf"), plot = syc_plot, width=8, height=5)
+ggsave(file.path(output_dir, "benchmark_sycophantic_plot.png"), plot = syc_plot, width=8, height=5)
 syc_plot
 
 ```
@@ -228,6 +230,7 @@ cont_plot <- ggplot(df_cont, aes(x = turn, y = mean_score, color = user_stance, 
 ggsave("plots/contrarian_plot.pdf", plot = cont_plot, width=8, height=5)
 ggsave("plots/contrarian_plot.png", plot = cont_plot, width=8, height=5)
 ggsave(file.path(output_dir, "benchmark_contrarian_plot.pdf"), plot = cont_plot, width=8, height=5)
+ggsave(file.path(output_dir, "benchmark_contrarian_plot.png"), plot = cont_plot, width=8, height=5)
 cont_plot
 
 ```
@@ -439,6 +442,7 @@ ggsave("plots/deltas_plot.pdf", plot = delta_plot, width=8, height=5)
 ggsave("plots/deltas_plot.png", plot = delta_plot, width=8, height=5)
 
 ggsave(file.path(output_dir, "benchmark_deltas_plot.pdf"), plot = delta_plot, width=8, height=5)
+ggsave(file.path(output_dir, "benchmark_deltas_plot.png"), plot = delta_plot, width=8, height=5)
 
 ```
 

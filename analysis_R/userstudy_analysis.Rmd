@@ -13,6 +13,13 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.width = 8, fig.height = 5)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
+# 
+# file.path(output_dir, "")
 ```
 
 
@@ -32,7 +39,7 @@ library(emmeans)
 # Colors
 
 ```{r}
-colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
+colors <- c("Pro" = "#0072B2", "Con" = "#D55E00", "Neutral" = "#adadad")
 
 ```
 
@@ -48,9 +55,6 @@ df_u_raw <- as_tibble(user_study_raw) %>%
   select(case_id, condition, topic, pre_opinion, turn, role, mean_score)
 
 
-
-
-
 df_u_raw <- df_u_raw %>%
   mutate(
     user_stance = factor(case_when(
@@ -61,7 +65,60 @@ df_u_raw <- df_u_raw %>%
   ) 
 
 
+```
 
+# Turn Histogram
+
+```{r}
+pdf(file.path(output_dir, "turn_histogramm.pdf"), width = 8, height = 5)
+
+hist(df_u_raw$turn,
+     breaks = "Scott",
+     main = "Distribution of Turns",
+     xlab = "Turn",
+     ylab = "Frequency",
+     xlim = c(0, 20),
+     col = "grey80",
+     border = "white",
+     las = 1,
+     cex.main = 1.3,
+     cex.lab = 1.1,
+     cex.axis = 0.9,
+     font.main = 1)
+box(bty = "l")
+
+dev.off()
+
+hist(df_u_raw$turn,
+     breaks = "Scott",
+     main = "Distribution of Turns",
+     xlab = "Turn",
+     ylab = "Frequency",
+     xlim = c(0, 20),
+     col = "grey80",
+     border = "white",
+     las = 1,
+     cex.main = 1.3,
+     cex.lab = 1.1,
+     cex.axis = 0.9,
+     font.main = 1)
+```
+
+
+# Define turn cutoff point
+```{r}
+quantiles <- quantile(df_u_raw$turn, probs = c(0.5, 0.75, 0.9, 0.95))
+print(quantiles)
+
+
+hist(df_u_raw$turn)
+
+df_u_raw <- df_u_raw %>% filter(turn <= 5)
+hist(df_u_raw$turn)
+```
+
+
+```{r split-data}
 # By conditions
 
 df_u_unp <- df_u_raw %>% 
@@ -74,41 +131,71 @@ df_u_cont <- df_u_raw %>%
   filter(condition == "contrarian") 
 
 
+# # Assistant turns
+# # & remove Neutral
+# 
+# df_u_unp_assistant <- df_u_unp %>% 
+#   filter(role == "assistant") %>% 
+#   filter(user_stance != "Neutral") 
+# 
+# df_u_syc_assistant <- df_u_syc %>% 
+#   filter(role == "assistant") %>% 
+#   filter(user_stance != "Neutral") 
+# 
+# df_u_cont_assistant <- df_u_cont %>% 
+#   filter(role == "assistant") %>% 
+#   filter(user_stance != "Neutral") 
+# 
+# 
+# 
+# # User turns
+# # & remove Neutral
+# 
+# 
+# df_u_unp_user <- df_u_unp %>% 
+#   filter(role == "user") %>%
+#   filter(user_stance != "Neutral") 
+# 
+# df_u_syc_user <- df_u_syc %>% 
+#   filter(role == "user") %>%
+#   filter(user_stance != "Neutral") 
+# 
+# df_u_cont_user <- df_u_cont %>% 
+#   filter(role == "user") %>%
+#   filter(user_stance != "Neutral") 
+
+
+
 # Assistant turns
-# & remove Neutral
 
 df_u_unp_assistant <- df_u_unp %>% 
-  filter(role == "assistant") %>% 
-  filter(user_stance != "Neutral") 
+  filter(role == "assistant") 
 
 df_u_syc_assistant <- df_u_syc %>% 
-  filter(role == "assistant") %>% 
-  filter(user_stance != "Neutral") 
+  filter(role == "assistant") 
 
 df_u_cont_assistant <- df_u_cont %>% 
-  filter(role == "assistant") %>% 
-  filter(user_stance != "Neutral") 
+  filter(role == "assistant") 
 
 
 
 # User turns
-# & remove Neutral
-
 
 df_u_unp_user <- df_u_unp %>% 
-  filter(role == "user") %>%
-  filter(user_stance != "Neutral") 
+  filter(role == "user") 
 
 df_u_syc_user <- df_u_syc %>% 
-  filter(role == "user") %>%
-  filter(user_stance != "Neutral") 
+  filter(role == "user") 
 
 df_u_cont_user <- df_u_cont %>% 
-  filter(role == "user") %>%
-  filter(user_stance != "Neutral") 
+  filter(role == "user") 
 
 
+
+
+  
 ```
+
 
 
 # Assistant Turns Plots
@@ -124,8 +211,8 @@ unp_plot_assistant <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, c
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of Model Stance over 8 Turns (Unprompted Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
@@ -147,8 +234,8 @@ syc_plot_assistant <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, c
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of Model Stance over 8 Turns (Sycophantic Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
@@ -169,8 +256,8 @@ cont_plot_assistant <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score,
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of Model Stance over 8 Turns (Contrarian Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
@@ -223,8 +310,6 @@ df_all_assistant$topic <- factor(df_all_assistant$topic)
 ```{r}
 
 
-
-# The interaction is your delta
 model_assistant <- lmer(mean_score ~ condition * user_stance + (1 | topic), data = df_all_assistant)
 
 summary(model_assistant)
@@ -311,8 +396,8 @@ unp_plot_user <- ggplot(df_u_unp_user, aes(x = turn, y = mean_score, color = use
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of User Stance over 8 Turns (Unprompted Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
@@ -334,8 +419,8 @@ syc_plot_user <- ggplot(df_u_syc_user, aes(x = turn, y = mean_score, color = use
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of User Stance over 8 Turns (Sycophantic Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
@@ -356,8 +441,8 @@ cont_plot_user <- ggplot(df_u_cont_user, aes(x = turn, y = mean_score, color = u
   scale_color_manual(values = colors) +
   scale_fill_manual(values = colors) +
   
-  scale_y_continuous(limits = c(-2, 2), breaks = seq(-2, 2, 1)) +
-  scale_x_continuous(limits = c(1, 8)) +
+  scale_y_continuous(limits = c(-3, 3), breaks = seq(-2, 2, 1)) +
+  scale_x_continuous(limits = c(1, 5)) +
   labs(
     # title = "Evolution of User Stance over 8 Turns (Contrarian Condition)",
     # subtitle = "Model responses to synthetic pro/con user inputs across 5 debate topics (T=0; 2 replications).\nPoints show mean stance scores calculated from 3 sentences per response. Ribbon shows 95% Confidence Interval.",
