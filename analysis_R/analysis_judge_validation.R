@@ -312,13 +312,14 @@ p
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 
+# Plots Path
+# output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
 ggsave(
-  "plots/confusion_matrix.pdf",
+  "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures/benchmark_confusion_matrix.pdf",
   plot   = p,
   width  = 7,
   height = 6.5,
   dpi    = 180,
   bg     = "white"
 )
-# 
-# message("Saved → confusion_matrix.png")
