@@ -232,6 +232,49 @@ ext_plot
 ```
 
 
+
+
+
+# Opinion Change by Prior Opinion Across Model Conditions
+ 
+```{r}
+
+
+# center scales  
+df$opinion_pre_cent <-  df$opinion_pre - 4
+df$opinion_post_cent  <-  df$opinion_post - 4
+df$opinion_change_cent  <-  df$opinion_post_cent - df$opinion_pre_cent
+
+
+# +
+#   scale_x_continuous(labels = c("-2", "-1\nCritical", "0\n|", "1\nAffirmative", "2")) + labs(x='Participant pre-task opinion', y='Opinion change toward model') 
+# +
+#   geom_label(x = -2, y = -2, hjust = 0, vjust = 0, size=3, aes(label = ifelse(model_stance=="Contra", "M = 0.215\nr = 0.103**", "M = 0.183\nr = -0.188***")))
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+  ) %>%
+ggplot(aes(y = opinion_change_cent, x = opinion_pre_cent, color = model_condition)) +
+  geom_jitter(alpha = 0.5, size = 1, color = "black", width = 0.3, shape =16) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  stat_summary(fun.data = "mean_cl_normal", size = 0.4) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  facet_grid(~ model_condition) +
+  guides(color = "none") +
+  labs(x='Pre-Interaction Opinion (Centered)', y='Opinion Change (Centered)') +
+  ylim(-3.3,3.3) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+Changes in participant post-interaction opinion against model condition with a fitted linear regression line and 95% confidence bands.
+Each point represents one participant. Red points indicate the mean opinion change at each level of pre-interaction opinion with 95% confidence intervals. The dashed horizontal line marks zero opinion change.
+
+
+
+
 ```{r}
 t.test(df$extremityPost[df$condition == "Sycophantic"],
        df$extremityPre[df$condition == "Sycophantic"],
@@ -246,11 +289,19 @@ t.test(df$extremityPost[df$condition == "Contrarian"],
        paired = TRUE)
 ```
 
+WIP
+
 As additional exploratory analysis, paired t-tests within each condition were conducted to test whether post-interaction extremity differed from pre-interaction extremity.  The sycophantic condition showed a non-significant trend toward increased extremity (mean change = 0.29, p = .062), while the unprompted (mean change = 0.10, p = .540) and contrarian (mean change = 0.04, p = .806) conditions showed no meaningful change.
 
 
 
 However, without a no-conversation control condition, these within-group comparisons cannot distinguish genuine attitude change from artifacts such as regression to the mean or repeated measurement effects. These preliminary findings motivate the inclusion of a control condition in future studies.........
+
+
+
+------------------
+
+
 
 # Confidence Extremity 
 
@@ -314,3 +365,56 @@ ext_plot_conf
 # ggsave(file.path(output_dir, "confidence_extremity.png"), plot = ext_plot, width=8, height=5)
 ```
 
+```{r}
+t.test(df$extremityConfPost[df$condition == "Sycophantic"],
+       df$extremityConfPre[df$condition == "Sycophantic"],
+       paired = TRUE)
+
+t.test(df$extremityConfPost[df$condition == "Unprompted"],
+       df$extremityConfPre[df$condition == "Unprompted"],
+       paired = TRUE)
+
+t.test(df$extremityConfPost[df$condition == "Contrarian"],
+       df$extremityConfPre[df$condition == "Contrarian"],
+       paired = TRUE)
+```
+
+WIP
+text ref above
+
+
+
+# Confidence Change by Prior Opinion Across Model Conditions
+ 
+```{r}
+
+
+# center scales  
+df$conf_pre_cent <-  df$pre_confidence - 4
+df$conf_post_cent  <-  df$post_confidence - 4
+df$conf_change_cent  <-  df$conf_post_cent - df$conf_pre_cent
+
+
+# +
+#   scale_x_continuous(labels = c("-2", "-1\nCritical", "0\n|", "1\nAffirmative", "2")) + labs(x='Participant pre-task opinion', y='Opinion change toward model') 
+# +
+#   geom_label(x = -2, y = -2, hjust = 0, vjust = 0, size=3, aes(label = ifelse(model_stance=="Contra", "M = 0.215\nr = 0.103**", "M = 0.183\nr = -0.188***")))
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+  ) %>%
+ggplot(aes(y = conf_change_cent, x = conf_pre_cent, color = model_condition)) +
+  geom_jitter(alpha = 0.5, size = 1, color = "black", width = 0.3, shape =16) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  stat_summary(fun.data = "mean_cl_normal", size = 0.4) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  facet_grid(~ model_condition) +
+  labs(x='Pre-Interaction Confidence (Centered)', y='Confidence Change (Centered)') +
+  guides(color = "none") +
+  ylim(-3.3,3.3) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```

@@ -540,7 +540,7 @@ data$condition <- relevel(factor(data$condition), ref = "Unprompted")
 pos <- position_jitter(width=.3, height=.0, seed=1)
 df %>% 
   mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
-  ggplot(aes(x=opinion_pre, y=opinion_change)) + facet_grid(~model_condition) + ylim(-3.3,3.3) + geom_jitter(width=.3, height=0.1, color="grey") +
+  ggplot(aes(x=opinion_pre, y=opinion_change)) + facet_grid(~model_condition) + ylim(-3.3,3.3) + geom_jitter(width=.3, height=0.1, color="grey") + geom_smooth(method = "lm", color="blue") +
   stat_summary(fun="mean", color="red") + stat_summary(fun.data="mean_cl_normal", color="red")
   
 
