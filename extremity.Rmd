@@ -227,14 +227,30 @@ ext_plot <- ggplot(coef_df, aes(x = Estimate, y = term_label, color = term_label
     legend.position = "none",
   )
 ext_plot
-ggsave(file.path(output_dir, "opinion_extremity.pdf"), plot = ext_plot, width=8, height=5)
-ggsave(file.path(output_dir, "opinion_extremity.png"), plot = ext_plot, width=8, height=5)
+# ggsave(file.path(output_dir, "opinion_extremity.pdf"), plot = ext_plot, width=8, height=5)
+# ggsave(file.path(output_dir, "opinion_extremity.png"), plot = ext_plot, width=8, height=5)
 ```
 
 
+```{r}
+t.test(df$extremityPost[df$condition == "Sycophantic"],
+       df$extremityPre[df$condition == "Sycophantic"],
+       paired = TRUE)
+
+t.test(df$extremityPost[df$condition == "Unprompted"],
+       df$extremityPre[df$condition == "Unprompted"],
+       paired = TRUE)
+
+t.test(df$extremityPost[df$condition == "Contrarian"],
+       df$extremityPre[df$condition == "Contrarian"],
+       paired = TRUE)
+```
+
+As additional exploratory analysis, paired t-tests within each condition were conducted to test whether post-interaction extremity differed from pre-interaction extremity.  The sycophantic condition showed a non-significant trend toward increased extremity (mean change = 0.29, p = .062), while the unprompted (mean change = 0.10, p = .540) and contrarian (mean change = 0.04, p = .806) conditions showed no meaningful change.
 
 
 
+However, without a no-conversation control condition, these within-group comparisons cannot distinguish genuine attitude change from artifacts such as regression to the mean or repeated measurement effects. These preliminary findings motivate the inclusion of a control condition in future studies.........
 
 # Confidence Extremity 
 
@@ -279,7 +295,7 @@ coef_conf_df <- as.data.frame(res_conf$coef_table) |>
     term_label = factor(term_label, levels = c("Sycophantic", "Contrarian"))
   )
 
-ext_plot <- ggplot(coef_conf_df, aes(x = Estimate, y = term_label, color = term_label)) +
+ext_plot_conf <- ggplot(coef_conf_df, aes(x = Estimate, y = term_label, color = term_label)) +
   geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.6) +
   geom_point(size = 3) +
   geom_errorbarh(aes(xmin = `2.5 %`, xmax = `97.5 %`), height = 0.15) +
@@ -293,8 +309,8 @@ ext_plot <- ggplot(coef_conf_df, aes(x = Estimate, y = term_label, color = term_
     panel.grid.minor.x = element_line(color = "grey90"),
     legend.position = "none",
   )
-ext_plot
-ggsave(file.path(output_dir, "confidence_extremity.pdf"), plot = ext_plot, width=8, height=5)
-ggsave(file.path(output_dir, "confidence_extremity.png"), plot = ext_plot, width=8, height=5)
+ext_plot_conf
+# ggsave(file.path(output_dir, "confidence_extremity.pdf"), plot = ext_plot, width=8, height=5)
+# ggsave(file.path(output_dir, "confidence_extremity.png"), plot = ext_plot, width=8, height=5)
 ```
 
