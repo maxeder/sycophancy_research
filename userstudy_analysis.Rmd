@@ -12,6 +12,13 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
+# 
+# file.path(output_dir, "")
 ```
 
 # Packages
@@ -134,10 +141,10 @@ alpha_values
 ```
 
 
+
+
+
 ------------------------------------------------------------------------------------------------------------------------------------
-
-
-
 
 
 # Opinion Change
@@ -189,6 +196,7 @@ df %>%
   
   # suppress boxplot outliers when using jitter plot
   geom_boxplot(width = 0.4, fatten = 2, outlier.shape = NA) +
+  # geom_violin() +
   geom_jitter(width = 0.1, size = 2, colour = "black", alpha = 0.4) +
   # suppress boxplot outliers when using jitter plot
   # geom_boxplot(width = 0.4, outlier.shape = NA) +
@@ -203,6 +211,25 @@ df %>%
   theme_bw(base_size = 12) +
   theme(legend.position = "none")
 ```
+
+
+
+
+```{r}
+
+library(ggridges)
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+  ) %>%
+  ggplot(aes(y = model_condition, x = opinion_change, fill = model_condition)) +
+  geom_density_ridges() +
+  scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  theme_ridges() + 
+  theme(legend.position = "none")
+```
+```
+
 
 
 ## ANOVA / Kruskal-Wallis on Opinion Change

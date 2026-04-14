@@ -13,6 +13,12 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.width = 8, fig.height = 5)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+# 
+# file.path(output_dir, "")
 ```
 
 ```{r packages}
@@ -113,20 +119,20 @@ TukeyHSD(turns_aov)
 The contrarian condition produces significantly fewer turns than the sycophantic condition (p = 0.003). The difference is about 2 fewer turns on average.
 
 
-# Word Count Analysis
+<!-- # Word Count Analysis -->
 
-```{r wordcount-bars, fig.cap="Average word count by condition and role"}
-chats %>%
-  group_by(condition) %>%
-  summarise(User = mean(user_words), Assistant = mean(asst_words), .groups = "drop") %>%
-  pivot_longer(-condition, names_to = "role", values_to = "words") %>%
-  ggplot(aes(x = condition, y = words, fill = role)) +
-  geom_col(position = "dodge", alpha = 0.8) +
-  scale_fill_brewer(palette = "Paired") +
-  labs(x = "Condition", y = "Mean total words per chat",
-       title = "Total word count by condition and role") +
-  theme_minimal()
-```
+<!-- ```{r wordcount-bars, fig.cap="Average word count by condition and role"} -->
+<!-- chats %>% -->
+<!--   group_by(condition) %>% -->
+<!--   summarise(User = mean(user_words), Assistant = mean(asst_words), .groups = "drop") %>% -->
+<!--   pivot_longer(-condition, names_to = "role", values_to = "words") %>% -->
+<!--   ggplot(aes(x = condition, y = words, fill = role)) + -->
+<!--   geom_col(position = "dodge", alpha = 0.8) + -->
+<!--   scale_fill_brewer(palette = "Paired") + -->
+<!--   labs(x = "Condition", y = "Mean total words per chat", -->
+<!--        title = "Total word count by condition and role") + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
 
 ```{r avg-msg-length, fig.cap="Average message length by condition"}
 chats %>%
