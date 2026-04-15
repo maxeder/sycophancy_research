@@ -113,7 +113,7 @@ df <- df %>%
   )
 ```
 
-
+# Overall opinion change
 ```{r}
 
 
@@ -153,16 +153,15 @@ df %>%
 ```
 
 
+# Flow Graph
+
 ```{r flow-graph, fig.width=9, fig.height=5, message=FALSE, warning=FALSE}
-# Opinion reinforcement - Overview
-# install.packages("ggalluvial")
-# library(ggalluvial)
 
 # Colors and alpha per change category
 flow_colors <- c("Reinforced" = "#4A9E6B", "Unchanged" = "#C0C0C0", "Neither" = "#C0C0C0", "Moderated" = "#C05050")
 flow_alpha  <- c("Reinforced" = 0.75,      "Unchanged" = 0.75,      "Neither" = 0.15,      "Moderated" = 0.75)
 
-df %>%
+flow_graph_opinion <- df %>%
   filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
   mutate(
     opinion_pre_centered  = round(opinion_pre)  - 4,   # recentre: -3 (disagree) to +3 (agree)
@@ -198,7 +197,7 @@ df %>%
   theme_minimal(base_size = 12) +
   theme(
     legend.position = "bottom",
-    strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 0),
+    # strip.background = element_rect(fill = NA, colour = "grey50"),
     panel.grid.major.x = element_blank(), # Remove vertical lines
     panel.grid.minor = element_blank(),
     strip.text       = element_text(size = 11, face = "bold"),
@@ -206,6 +205,10 @@ df %>%
     axis.title.y = element_text(margin = margin(r = 10)),
     panel.spacing = unit(2, "lines")
   )
+
+flow_graph_opinion
+ggsave(file.path(output_dir, "flow_graph_opinion.pdf"), plot = flow_graph_opinion, width=9, height=5)
+ggsave(file.path(output_dir, "flow_graph_opinion.png"), plot = flow_graph_opinion, width=9, height=5)
 ```
 
 
@@ -213,7 +216,7 @@ df %>%
 
 ```{r reinforcement-means, fig.width=7, fig.height=4, message=FALSE, warning=FALSE}
 # Opinion reinforcement - Graph
-df %>%
+opinion_reinforcement_graph <- df %>%
   filter(!is.na(opinion_pre), !is.na(opinion_post)) %>% 
   mutate(
     opinion_pre_centered  = round(opinion_pre)  - 4,
@@ -247,6 +250,10 @@ df %>%
   theme(
     legend.position = "none"
   )
+
+opinion_reinforcement_graph
+ggsave(file.path(output_dir, "opinion_reinforcement_graph.pdf"), plot = opinion_reinforcement_graph, width=8, height=5)
+ggsave(file.path(output_dir, "opinion_reinforcement_graph.png"), plot = opinion_reinforcement_graph, width=8, height=5)
 ```
 
 ```{r reinforcement-stats}
@@ -315,7 +322,7 @@ df$opinion_change_cent  <-  df$opinion_post_cent - df$opinion_pre_cent
 #   scale_x_continuous(labels = c("-2", "-1\nCritical", "0\n|", "1\nAffirmative", "2")) + labs(x='Participant pre-task opinion', y='Opinion change toward model') 
 # +
 #   geom_label(x = -2, y = -2, hjust = 0, vjust = 0, size=3, aes(label = ifelse(model_stance=="Contra", "M = 0.215\nr = 0.103**", "M = 0.183\nr = -0.188***")))
-df %>%
+opinion_change_by_pre_graph <- df %>%
   mutate(
     model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
   ) %>%
@@ -333,6 +340,10 @@ ggplot(aes(y = opinion_change_cent, x = opinion_pre_cent, color = model_conditio
     strip.text = element_text(face = "bold"),
     panel.grid.minor = element_blank()
   )
+
+opinion_change_by_pre_graph
+ggsave(file.path(output_dir, "opinion_change_by_pre_graph.pdf"), plot = opinion_change_by_pre_graph, width=8, height=5)
+ggsave(file.path(output_dir, "opinion_change_by_pre_graph.png"), plot = opinion_change_by_pre_graph, width=8, height=5)
 ```
 Changes in participant post-interaction opinion against model condition with a fitted linear regression line and 95% confidence bands.
 Each point represents one participant. Colored points indicate the mean opinion change at each level of pre-interaction opinion with 95% confidence intervals. 

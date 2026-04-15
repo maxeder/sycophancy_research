@@ -165,7 +165,7 @@ df %>%
 flow_colors <- c("Reinforced" = "#4A9E6B", "Unchanged" = "#C0C0C0", "Neither" = "#C0C0C0", "Moderated" = "#C05050")
 flow_alpha  <- c("Reinforced" = 0.75,      "Unchanged" = 0.75,      "Neither" = 0.15,      "Moderated" = 0.75)
 
-df %>%
+flow_graph_confidence <- df %>%
   filter(!is.na(pre_confidence), !is.na(post_confidence)) %>%
   mutate(
     confidence_pre_centered  = round(pre_confidence)  - 4,   # recentre: -3 (disagree) to +3 (agree)
@@ -201,7 +201,7 @@ df %>%
   theme_minimal(base_size = 12) +
   theme(
     legend.position = "bottom",
-    strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 0),
+    # strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 0),
     panel.grid.major.x = element_blank(), # Remove vertical lines
     panel.grid.minor = element_blank(),
     strip.text       = element_text(size = 11, face = "bold"),
@@ -209,13 +209,17 @@ df %>%
     axis.title.y = element_text(margin = margin(r = 10)),
     panel.spacing = unit(2, "lines")
   )
+
+flow_graph_confidence
+ggsave(file.path(output_dir, "flow_graph_confidence.pdf"), plot = flow_graph_confidence, width=9, height=5)
+ggsave(file.path(output_dir, "flow_graph_confidence.png"), plot = flow_graph_confidence, width=9, height=5)
 ```
 
 
 
 ```{r reinforcement-means, fig.width=7, fig.height=4, message=FALSE, warning=FALSE}
 # Confidence reinforcement - Graph
-df %>%
+confidence_reinforcement_graph <- df %>%
   filter(!is.na(pre_confidence), !is.na(post_confidence)) %>%
   mutate(
     confidence_pre_centered  = round(pre_confidence)  - 4,
@@ -249,6 +253,12 @@ df %>%
   labs(x = "Condition", y = "Confidence reinforcement") +
   theme_minimal(base_size = 12) + 
   theme(legend.position = "none")
+
+
+
+confidence_reinforcement_graph
+ggsave(file.path(output_dir, "confidence_reinforcement_graph.pdf"), plot = confidence_reinforcement_graph, width=8, height=5)
+ggsave(file.path(output_dir, "confidence_reinforcement_graph.png"), plot = confidence_reinforcement_graph, width=8, height=5)
 ```
 
 ```{r reinforcement-stats}
@@ -315,7 +325,7 @@ df$confidence_change_cent  <-  df$confidence_post_centered - df$confidence_pre_c
 #   scale_x_continuous(labels = c("-2", "-1\nCritical", "0\n|", "1\nAffirmative", "2")) + labs(x='Participant pre-task opinion', y='Opinion change toward model') 
 # +
 #   geom_label(x = -2, y = -2, hjust = 0, vjust = 0, size=3, aes(label = ifelse(model_stance=="Contra", "M = 0.215\nr = 0.103**", "M = 0.183\nr = -0.188***")))
-df %>%
+confidence_change_by_pre_graph <- df %>%
   mutate(
     model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
   ) %>%
@@ -333,6 +343,11 @@ ggplot(aes(y = confidence_change_cent, x = confidence_pre_centered, color = mode
     strip.text = element_text(face = "bold"),
     panel.grid.minor = element_blank()
   )
+
+
+confidence_change_by_pre_graph
+ggsave(file.path(output_dir, "confidence_change_by_pre_graph.pdf"), plot = confidence_change_by_pre_graph, width=8, height=5)
+ggsave(file.path(output_dir, "confidence_change_by_pre_graph.png"), plot = confidence_change_by_pre_graph, width=8, height=5)
 ```
 Changes in participant post-interaction confidence against model condition with a fitted linear regression line and 95% confidence bands.
 Each point represents one participant. Colored points indicate the mean confidence change at each level of pre-interaction confidence with 95% confidence intervals. 

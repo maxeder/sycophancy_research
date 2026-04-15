@@ -891,8 +891,9 @@ df %>%
   ) %>%
   select(CASE, qualitative_question, question_mean, expQual) %>%
   arrange(qualitative_question) %>%
-  kable(caption = "Qualitative Experience Question") %>%
-  kable_styling(bootstrap_options = "striped")
+  # kable(caption = "Qualitative Experience Question") %>%
+  # kable_styling(bootstrap_options = "striped") %>%
+  write.csv("qualitative_experience.csv", row.names = FALSE)
 ```
 
 
