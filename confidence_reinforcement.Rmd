@@ -172,7 +172,8 @@ df %>%
     confidence_post_centered = round(post_confidence) - 4,
     confidence_pre_factor    = factor(confidence_pre_centered,  levels = 3:-3),  # 3 on top, -3 on bottom
     confidence_post_factor   = factor(confidence_post_centered, levels = 3:-3),
-    model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    # model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    model_condition       = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic")),
     change_type = case_when(
       confidence_pre_centered == 0                                              ~ "Neither",    # started neutral
       confidence_post_centered == confidence_pre_centered                          ~ "Unchanged",
@@ -225,7 +226,8 @@ df %>%
       .default = "Neutral"
     ),
     confidence_reinforcement = (confidence_post_centered - confidence_pre_centered) * sign(confidence_pre_centered),
-    model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian"))
+    # model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian"))
+    model_condition       = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
   ) %>%
   filter(confidence_pre_centered != 0) %>% # Optional
   ggplot(aes(x = model_condition, y = confidence_reinforcement, color = model_condition)) +
@@ -245,7 +247,8 @@ df %>%
     size = 3
   ) +
   labs(x = "Condition", y = "Confidence reinforcement") +
-  theme_minimal(base_size = 12)
+  theme_minimal(base_size = 12) + 
+  theme(legend.position = "none")
 ```
 
 ```{r reinforcement-stats}
@@ -263,6 +266,37 @@ lm(formula = confidence_reinforcement ~ model_condition + 0) %>% summary() # Tes
 ```
 
 
+# Moderators
+
+```{r}
+# Literacy
+df$ai_literacy_c <- scale(df$ai_literacy, scale = FALSE)
+df %>%
+  filter(!is.na(pre_confidence), !is.na(post_confidence)) %>%
+  mutate(
+    confidence_pre_centered  = round(pre_confidence)  - 4,
+    confidence_post_centered = round(post_confidence) - 4,
+    confidence_reinforcement = (confidence_post_centered - confidence_pre_centered) * sign(confidence_pre_centered),
+    # model_condition       = relevel(factor(model_condition), ref = "Unprompted")
+  ) %>%
+  filter(confidence_pre_centered != 0) %>%
+lm(formula = confidence_reinforcement ~ model_condition * ai_literacy_c + 0) %>% summary()
+
+
+# usage
+df$ai_usage_c <- scale(df$ai_usage, scale = FALSE)
+
+df %>%
+  filter(!is.na(pre_confidence), !is.na(post_confidence)) %>%
+  mutate(
+    confidence_pre_centered  = round(pre_confidence)  - 4,
+    confidence_post_centered = round(post_confidence) - 4,
+    confidence_reinforcement = (confidence_post_centered - confidence_pre_centered) * sign(confidence_pre_centered),
+    # model_condition       = relevel(factor(model_condition), ref = "Unprompted")
+  ) %>%
+  filter(confidence_pre_centered != 0) %>%
+lm(formula = confidence_reinforcement ~ model_condition * ai_usage_c + 0) %>% summary()
+```
 
 
 
@@ -332,12 +366,12 @@ conditions <- c("Unprompted", "Sycophantic", "Contrarian")
 lapply(conditions, function(ref) {
   df %>%
     mutate(model_condition = relevel(factor(model_condition), ref = ref)) %>%
-    lm(formula = confidence_change_cent ~ model_condition * confidence_pre_cent) %>%
+    lm(formula = confidence_change_cent ~ model_condition * confidence_pre_centered) %>%
     summary() %>%
     coef() %>%
     as.data.frame() %>%
     rownames_to_column("term") %>%
-    filter(term == "confidence_pre_cent") %>%
+    filter(term == "confidence_pre_centered") %>%
     mutate(reference = ref)
 }) %>%
   bind_rows()

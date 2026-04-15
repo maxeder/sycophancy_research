@@ -672,6 +672,12 @@ cat(sprintf("  %-12s Mdn=%.2f  IQR=[%.2f, %.2f]\n",
 
 ------------------------------------------------------------------------------------------------------------------------------------
 
+```{r}
+df$competence
+hist(df$satisfaction)
+hist(df$trust)
+hist(df$continuance)
+```
 
 # Experience Measures
 

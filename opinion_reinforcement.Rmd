@@ -52,7 +52,7 @@ FILE_PATH = "data/full_data.csv"
 raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
 
 # Inspect
-# glimpse(raw)
+glimpse(raw)
 ```
 
 ```{r clean-data}
@@ -169,7 +169,8 @@ df %>%
     opinion_post_centered = round(opinion_post) - 4,
     opinion_pre_factor    = factor(opinion_pre_centered,  levels = 3:-3),  # 3 on top, -3 on bottom
     opinion_post_factor   = factor(opinion_post_centered, levels = 3:-3),
-    model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    # model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    model_condition       = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic")),
     change_type = case_when(
       opinion_pre_centered == 0                                              ~ "Neither",    # started neutral
       opinion_post_centered == opinion_pre_centered                          ~ "Unchanged",
@@ -260,6 +261,39 @@ df %>%
   ) %>%
   filter(opinion_pre_centered != 0) %>%
 lm(formula = opinion_reinforcement ~ model_condition + 0) %>% summary() # Testing all conditions against 0
+```
+
+
+# Moderators
+
+```{r}
+# Literacy
+df$ai_literacy_c <- scale(df$ai_literacy, scale = FALSE)
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered  = round(opinion_pre)  - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    opinion_reinforcement = (opinion_post_centered - opinion_pre_centered) * sign(opinion_pre_centered),
+    # model_condition       = relevel(factor(model_condition), ref = "Unprompted")
+  ) %>%
+  filter(opinion_pre_centered != 0) %>%
+lm(formula = opinion_reinforcement ~ model_condition * ai_literacy_c + 0) %>% summary()
+
+
+# usage
+df$ai_usage_c <- scale(df$ai_usage, scale = FALSE)
+
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered  = round(opinion_pre)  - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    opinion_reinforcement = (opinion_post_centered - opinion_pre_centered) * sign(opinion_pre_centered),
+    # model_condition       = relevel(factor(model_condition), ref = "Unprompted")
+  ) %>%
+  filter(opinion_pre_centered != 0) %>%
+lm(formula = opinion_reinforcement ~ model_condition * ai_usage_c + 0) %>% summary()
 ```
 
 
