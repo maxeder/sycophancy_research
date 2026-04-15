@@ -1,0 +1,328 @@
+
+---
+title: "SycLLM User Study — Analysis Reinforcement"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
+# 
+# file.path(output_dir, "")
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(lme4)
+library(emmeans)
+library(psych)
+library(effectsize)
+library(dunn.test)
+library(dplyr)
+library(jtools) 
+library(ggalluvial)
+
+
+```
+
+
+# Data Loading & Cleaning
+
+
+```{r load-data}
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+
+# Inspect
+# glimpse(raw)
+```
+
+```{r clean-data}
+df <- raw %>%
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("Unprompted", "Sycophantic", "Contrarian")),
+    topic  = factor(topic)
+  )
+
+cat("N after exclusions:", nrow(df), "\n")
+```
+
+```{r attitude-scoring}
+# Helper: row-wise mean ignoring NA
+row_mean <- function(df, cols) {
+  rowMeans(df[, cols], na.rm = TRUE)
+}
+
+
+topics <- c("space", "quota", "taxes", "animals", "speech")
+
+# build composite pre-post opinion and confidence measures & experience composites via means
+df <- df %>%
+  mutate(
+    # Pre Opinion
+    opinion_pre = case_when(
+      topic == "space"   ~ space_02,
+      topic == "quota"   ~ pre_quota,
+      topic == "taxes"   ~ pre_taxes,
+      topic == "animals" ~ pre_animals,
+      topic == "speech"  ~ pre_speech
+    ),
+    # Post-opinion
+    opinion_post = case_when(
+      topic == "space"   ~ post_space_04,
+      topic == "quota"   ~ post_quota,
+      topic == "taxes"   ~ post_taxes,
+      topic == "animals" ~ post_animals,
+      topic == "speech"  ~ post_speech
+    ),
+    opinion_change = opinion_post - opinion_pre,
+    confidence_change = post_confidence - pre_confidence,
+    # Scale composites
+    competence  = row_mean(., c("competence_01", "competence_02", "competence_03")),
+    trust       = row_mean(., c("trust_01",       "trust_02",       "trust_03")),
+    satisfaction = row_mean(., paste0("satisfaction_0", 1:5)),
+    sycophancy  = row_mean(., c("sycophancy_01",  "sycophancy_02")),
+    credibility = row_mean(., c("credibility_01", "credibility_02", "credibility_03")),
+    continuance = row_mean(., c("continuance_01", "continuance_02"))
+  )
+```
+
+
+```{r}
+
+
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered = round(opinion_pre) - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    changed = opinion_post_centered != opinion_pre_centered,
+    abs_change = abs(opinion_post_centered - opinion_pre_centered)
+  ) %>%
+  # group_by(model_condition) %>%
+  summarise(
+    n = n(),
+    n_changed = sum(changed),
+    pct_changed = round(mean(changed) * 100, 1),
+    mean_abs_change = round(mean(abs_change), 2),
+    sd_abs_change = round(sd(abs_change), 2)
+  )
+
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered = round(opinion_pre) - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    changed = opinion_post_centered != opinion_pre_centered,
+    abs_change = abs(opinion_post_centered - opinion_pre_centered)
+  ) %>%
+  group_by(model_condition) %>%
+  summarise(
+    n = n(),
+    n_changed = sum(changed),
+    pct_changed = round(mean(changed) * 100, 1),
+    mean_abs_change = round(mean(abs_change), 2),
+    sd_abs_change = round(sd(abs_change), 2)
+  )
+```
+
+
+```{r flow-graph, fig.width=9, fig.height=5, message=FALSE, warning=FALSE}
+# Opinion reinforcement - Overview
+# install.packages("ggalluvial")
+# library(ggalluvial)
+
+# Colors and alpha per change category
+flow_colors <- c("Reinforced" = "#4A9E6B", "Unchanged" = "#C0C0C0", "Neither" = "#C0C0C0", "Moderated" = "#C05050")
+flow_alpha  <- c("Reinforced" = 0.75,      "Unchanged" = 0.75,      "Neither" = 0.15,      "Moderated" = 0.75)
+
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered  = round(opinion_pre)  - 4,   # recentre: -3 (disagree) to +3 (agree)
+    opinion_post_centered = round(opinion_post) - 4,
+    opinion_pre_factor    = factor(opinion_pre_centered,  levels = 3:-3),  # 3 on top, -3 on bottom
+    opinion_post_factor   = factor(opinion_post_centered, levels = 3:-3),
+    model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    change_type = case_when(
+      opinion_pre_centered == 0                                              ~ "Neither",    # started neutral
+      opinion_post_centered == opinion_pre_centered                          ~ "Unchanged",
+      sign(opinion_post_centered) == sign(opinion_pre_centered) &
+        abs(opinion_post_centered) > abs(opinion_pre_centered)               ~ "Reinforced", # same direction, more extreme
+      TRUE                                                                   ~ "Moderated"   # toward centre, to 0, or crossed sides
+    ),
+    change_type = factor(change_type, levels = c("Reinforced", "Unchanged", "Neither", "Moderated"))
+  ) %>%
+  count(model_condition, opinion_pre_factor, opinion_post_factor, change_type) %>%
+  group_by(model_condition) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(axis1 = opinion_pre_factor, axis2 = opinion_post_factor, y = prop)) +
+  geom_alluvium(aes(fill = change_type, alpha = change_type), width = 1/4) +
+  geom_stratum(fill = "grey88", colour = "grey40", width = 1/4) +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 3, fontface = "bold") +
+  scale_x_discrete(limits = c("Pre-\nopinion", "Post-\nopinion"), expand = c(0.05, 0.05)) +
+  scale_fill_manual(values = flow_colors, name = NULL) +
+  scale_alpha_manual(values = flow_alpha, guide = "none") +
+  guides(fill = guide_legend(override.aes = list(alpha = unname(flow_alpha)))) +
+  facet_wrap(~model_condition) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percentage of participants") +
+  theme_bw(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 1),
+    strip.text       = element_text(size = 11, face = "bold"),
+    axis.text.x      = element_text(size = 10, face = "bold")
+  )
+```
+
+
+
+```{r reinforcement-means, fig.width=7, fig.height=4, message=FALSE, warning=FALSE}
+# Opinion reinforcement - Graph
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>% 
+  mutate(
+    opinion_pre_centered  = round(opinion_pre)  - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    opinion_direction     = case_when(
+      opinion_pre_centered < 0 ~ "Negative",
+      opinion_pre_centered > 0 ~ "Positive",
+      .default = "Neutral"
+    ),
+    opinion_reinforcement = (opinion_post_centered - opinion_pre_centered) * sign(opinion_pre_centered),
+    model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian"))
+  ) %>%
+  filter(opinion_pre_centered != 0) %>% # Optional
+  ggplot(aes(x = model_condition, y = opinion_reinforcement)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  geom_jitter(width = 0.15, height = 0.05, alpha = 0.4, size = 1.5, colour = "grey40") +
+  stat_summary(fun.data = mean_cl_normal, geom = "pointrange", size = 0.6, linewidth = 0.8) +
+  labs(x = "Condition", y = "Opinion reinforcement") +
+  theme_bw(base_size = 12)
+```
+
+```{r reinforcement-stats}
+# Opinion reinforcement - Stats
+df %>%
+  filter(!is.na(opinion_pre), !is.na(opinion_post)) %>%
+  mutate(
+    opinion_pre_centered  = round(opinion_pre)  - 4,
+    opinion_post_centered = round(opinion_post) - 4,
+    opinion_reinforcement = (opinion_post_centered - opinion_pre_centered) * sign(opinion_pre_centered),
+    # model_condition       = relevel(factor(model_condition), ref = "Unprompted")
+  ) %>%
+  filter(opinion_pre_centered != 0) %>%
+lm(formula = opinion_reinforcement ~ model_condition + 0) %>% summary() # Testing all conditions against 0
+```
+
+
+
+
+
+# Opinion Change by Prior Opinion Across Model Conditions
+ 
+```{r}
+
+
+# center scales  
+df$opinion_pre_cent <-  df$opinion_pre - 4
+df$opinion_post_cent  <-  df$opinion_post - 4
+df$opinion_change_cent  <-  df$opinion_post_cent - df$opinion_pre_cent
+
+
+# +
+#   scale_x_continuous(labels = c("-2", "-1\nCritical", "0\n|", "1\nAffirmative", "2")) + labs(x='Participant pre-task opinion', y='Opinion change toward model') 
+# +
+#   geom_label(x = -2, y = -2, hjust = 0, vjust = 0, size=3, aes(label = ifelse(model_stance=="Contra", "M = 0.215\nr = 0.103**", "M = 0.183\nr = -0.188***")))
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+  ) %>%
+ggplot(aes(y = opinion_change_cent, x = opinion_pre_cent, color = model_condition)) +
+  geom_jitter(alpha = 0.5, size = 1, color = "black", width = 0.3, shape =16) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  stat_summary(fun.data = "mean_cl_normal", size = 0.4) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  facet_grid(~ model_condition) +
+  guides(color = "none") +
+  labs(x='Pre-Interaction Opinion (Centered)', y='Opinion Change (Centered)') +
+  ylim(-3.3,3.3) +
+  theme_minimal(base_size = 13) +
+  theme(
+    strip.text = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+Changes in participant post-interaction opinion against model condition with a fitted linear regression line and 95% confidence bands.
+Each point represents one participant. Colored points indicate the mean opinion change at each level of pre-interaction opinion with 95% confidence intervals. 
+
+
+```{r}
+# df %>%
+# lm(formula = opinion_change_cent ~ model_condition * opinion_pre_cent) %>% summary()
+# 
+# # Contrarian as reference
+# df %>%
+#   mutate(model_condition = relevel(factor(model_condition), ref = "Contrarian")) %>%
+#   lm(formula = opinion_change_cent ~ model_condition * opinion_pre_cent) %>% summary()
+# 
+# 
+# # Sycophantic as reference
+# df %>%
+#   mutate(model_condition = relevel(factor(model_condition), ref = "Sycophantic")) %>%
+#   lm(formula = opinion_change_cent ~ model_condition * opinion_pre_cent) %>% summary()
+# 
+# 
+# # Unprompted as reference
+# df %>%
+#   mutate(model_condition = relevel(factor(model_condition), ref = "Unprompted")) %>%
+#   lm(formula = opinion_change_cent ~ model_condition * opinion_pre_cent) %>% summary()
+
+
+# All three conditions tested against zero
+conditions <- c("Unprompted", "Sycophantic", "Contrarian")
+
+lapply(conditions, function(ref) {
+  df %>%
+    mutate(model_condition = relevel(factor(model_condition), ref = ref)) %>%
+    lm(formula = opinion_change_cent ~ model_condition * opinion_pre_cent) %>%
+    summary() %>%
+    coef() %>%
+    as.data.frame() %>%
+    rownames_to_column("term") %>%
+    filter(term == "opinion_pre_cent") %>%
+    mutate(reference = ref)
+}) %>%
+  bind_rows()
+```
+
+
+

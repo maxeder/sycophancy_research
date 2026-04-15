@@ -264,6 +264,19 @@ chats %>%
   labs(x = "Condition", y = "Average words per message",
        title = "Message length by condition and role") +
   theme_minimal()
+
+
+
+chats %>%
+  select(condition, user_words, asst_words) %>%
+  pivot_longer(-condition, names_to = "role", values_to = "words",
+               names_pattern = "(\\w+)_words") %>%
+  ggplot(aes(x = condition, y = words, fill = role)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_brewer(palette = "Paired", labels = c("Assistant", "User")) +
+  labs(x = "Condition", y = "Average words per message",
+       title = "Message length by condition and role") +
+  theme_minimal()
 ```
 
 
