@@ -203,7 +203,7 @@ df_u_cont_user <- df_u_cont %>%
 ```{r}
 
 unp_plot_assistant <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1, shape = 16) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
@@ -226,7 +226,7 @@ unp_plot_assistant <- ggplot(df_u_unp_assistant, aes(x = turn, y = mean_score, c
 
 
 syc_plot_assistant <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1, shape = 16) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
@@ -248,7 +248,7 @@ syc_plot_assistant <- ggplot(df_u_syc_assistant, aes(x = turn, y = mean_score, c
   theme(legend.position = "bottom") 
 
 cont_plot_assistant <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1, shape = 16) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +
@@ -488,7 +488,7 @@ df_all_user <- bind_rows(
 df_all_user
 
 ggplot(df_all_user, aes(x = turn, y = mean_score, color = condition, fill = condition)) +
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.3, size = 1, shape = 16) +
   stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
   stat_summary(fun = mean, geom = "line", linewidth = 1) +
   stat_summary(fun = mean, geom = "point", size = 2.5, shape = 21, color = "white", stroke = 1) +

@@ -80,7 +80,7 @@ df_cont <- as_tibble(cont_data_raw) %>%
 unp_plot <- ggplot(df_unp, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # Data Points
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1, shape = 16) +
   # geom_boxplot(aes(group = interaction(turn, user_stance)),
   #              position = position_dodge(width = 0.6),
   #              width = 0.4, alpha = 0.2, outlier.size = 0.8, outlier.alpha = 0.3) +
@@ -136,7 +136,7 @@ ggsave(file.path(output_dir, "benchmark_unprompted_plot.png"), plot = unp_plot, 
 syc_plot <- ggplot(df_syc, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # Data Points
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1, shape = 16) +
   
   # Error Ribbon
   # with standard error
@@ -191,7 +191,7 @@ syc_plot
 cont_plot <- ggplot(df_cont, aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
   
   # Data Points
-  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1) +
+  geom_jitter(width = 0.05, height = 0.05, alpha = 0.1, size = 1, shape = 16) +
   
   # Error Ribbon
   # with standard error
