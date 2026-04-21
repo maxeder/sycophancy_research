@@ -74,7 +74,7 @@ pdf(file.path(output_dir, "turn_histogramm.pdf"), width = 8, height = 5)
 
 hist(df_u_raw$turn,
      breaks = "Scott",
-     main = "Distribution of Turns",
+     main = "",
      xlab = "Turn",
      ylab = "Frequency",
      xlim = c(0, 20),
@@ -91,7 +91,7 @@ dev.off()
 
 hist(df_u_raw$turn,
      breaks = "Scott",
-     main = "Distribution of Turns",
+     main = "",
      xlab = "Turn",
      ylab = "Frequency",
      xlim = c(0, 20),
@@ -269,21 +269,21 @@ cont_plot_assistant <- ggplot(df_u_cont_assistant, aes(x = turn, y = mean_score,
   theme_minimal() +
   theme(legend.position = "bottom") 
 
-unp_plot_assistant
-syc_plot_assistant
-cont_plot_assistant
-ggsave("plots/user_study_assistant_unprompted_plot.pdf", plot = unp_plot_assistant, width=8, height=5)
-ggsave("plots/user_study_assistant_sycophantic_plot.pdf", plot = syc_plot_assistant, width=8, height=5)
-ggsave("plots/user_study_assistant_contrarian_plot.pdf", plot = cont_plot_assistant, width=8, height=5)
-
-
-ggsave(file.path(output_dir, "user_study_assistant_unprompted_plot.pdf"), plot = unp_plot_assistant, width=8, height=5)
-ggsave(file.path(output_dir, "user_study_assistant_sycophantic_plot.pdf"), plot = syc_plot_assistant, width=8, height=5)
-ggsave(file.path(output_dir, "user_study_assistant_contrarian_plot.pdf"), plot = cont_plot_assistant, width=8, height=5)
-
-ggsave(file.path(output_dir, "user_study_assistant_unprompted_plot.png"), plot = unp_plot_assistant, width=8, height=5)
-ggsave(file.path(output_dir, "user_study_assistant_sycophantic_plot.png"), plot = syc_plot_assistant, width=8, height=5)
-ggsave(file.path(output_dir, "user_study_assistant_contrarian_plot.png"), plot = cont_plot_assistant, width=8, height=5)
+# unp_plot_assistant
+# syc_plot_assistant
+# cont_plot_assistant
+# ggsave("plots/user_study_assistant_unprompted_plot.pdf", plot = unp_plot_assistant, width=8, height=5)
+# ggsave("plots/user_study_assistant_sycophantic_plot.pdf", plot = syc_plot_assistant, width=8, height=5)
+# ggsave("plots/user_study_assistant_contrarian_plot.pdf", plot = cont_plot_assistant, width=8, height=5)
+# 
+# 
+# ggsave(file.path(output_dir, "user_study_assistant_unprompted_plot.pdf"), plot = unp_plot_assistant, width=8, height=5)
+# ggsave(file.path(output_dir, "user_study_assistant_sycophantic_plot.pdf"), plot = syc_plot_assistant, width=8, height=5)
+# ggsave(file.path(output_dir, "user_study_assistant_contrarian_plot.pdf"), plot = cont_plot_assistant, width=8, height=5)
+# 
+# ggsave(file.path(output_dir, "user_study_assistant_unprompted_plot.png"), plot = unp_plot_assistant, width=8, height=5)
+# ggsave(file.path(output_dir, "user_study_assistant_sycophantic_plot.png"), plot = syc_plot_assistant, width=8, height=5)
+# ggsave(file.path(output_dir, "user_study_assistant_contrarian_plot.png"), plot = cont_plot_assistant, width=8, height=5)
 
 
 ```
@@ -521,6 +521,8 @@ summary(m)
 ```{r}
 df_all_user$condition <- relevel(factor(df_all_user$condition), ref = "unprompted")
 
+# df_all_user <- df_all_user %>% filter(turn <= 5)
+
 model <- lmer(mean_score ~ turn * condition + (1 | case_id), data = df_all_user)
 summary(model)
 
@@ -549,8 +551,9 @@ ggplot(aes(x = turn, y = mean_score, colour = condition)) +
     y = "Mean Agreement Score",
     colour = "Condition"
   ) +
+  # scale_x_continuous(limits = c(1, 5)) +
   guides(color = "none") +
-    theme_minimal(base_size = 13) +
+    theme_minimal(base_size = 12) +
   theme(
     strip.text = element_text(face = "bold"),
     panel.grid.minor = element_blank(),
@@ -560,9 +563,9 @@ ggplot(aes(x = turn, y = mean_score, colour = condition)) +
 
 
 user_study_user_agreement_plot
-ggsave(file.path(output_dir, "user_study_user_agreement_plot.pdf"), plot = user_study_user_agreement_plot, width=10, height=5)
+ggsave(file.path(output_dir, "user_study_user_agreement_plot.pdf"), plot = user_study_user_agreement_plot, width=8, height=5)
 
-ggsave(file.path(output_dir, "user_study_user_agreement_plot.png"), plot = user_study_user_agreement_plot, width=10, height=5)
+ggsave(file.path(output_dir, "user_study_user_agreement_plot.png"), plot = user_study_user_agreement_plot, width=8, height=5)
 ```
 
 

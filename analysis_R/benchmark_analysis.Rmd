@@ -421,11 +421,12 @@ delta_plot <- ggplot(delta_df, aes(x = condition, y = estimate, fill = condition
                                "unprompted" = "Unprompted", 
                                "sycophantic" = "Sycophantic")) +
   labs(
-    title = "Stance Shift Toward User (Pro - Con Delta)",
+    # title = "Stance Shift Toward User (Pro - Con Delta)",
     y = "Delta (Pro - Con)",
     x = NULL
   ) +
   theme_minimal() +
+  scale_y_continuous(limits = c(-3.5, 3.5), breaks = seq(-3, 3, 1)) +
   # theme(legend.position = "none") +
   theme(
     legend.position = "none",

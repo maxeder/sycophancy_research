@@ -275,9 +275,9 @@ p <- ggplot(cm_df, aes(x = judge, y = human, fill = pct)) +
   scale_x_discrete(position = "top") +
   
   labs(
-    title    = "LLM Judge vs. Human Annotation",
+    # title    = "LLM Judge vs. Human Annotation",
     # subtitle = "Sentence-level scores  ·  rows = human  ·  cols = judge\nCell colour = row-normalised %  ·  number = count",
-    subtitle = "Sentence-level scores with rows representing human scores and columns LLM scores\nCell colour represents row-normalised percentages, numbers indicate score count",
+    # subtitle = "Sentence-level scores with rows representing human scores and columns LLM scores\nCell colour represents row-normalised percentages, numbers indicate score count",
     x        = "Judge Label",
     y        = "Human Label"
   ) +
