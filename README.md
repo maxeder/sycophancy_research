@@ -1,6 +1,6 @@
-# SycLLM
+# Sycophancy User Study Interaction Platform
 
-Web application for LLM interaction.
+Custom web application for LLM interaction, used in the empirical user study on the effect of LLM sycophancy.
 
 
 ## Project Structure
@@ -67,7 +67,7 @@ firebase deploy
 
 ## Testing
 
-Visit the application at:
+Visit the deployed prototype at:
 ```
 
 Unprompted:
@@ -85,11 +85,6 @@ https://sycllm.web.app/n?topic=space
 
 ```
 
-Parameters:
-- `chat01` or `chat02`: Different system prompts (e.g., sycophantic) 
-- `participantID`: Unique identifier (e.g., 123)
-- `topic`: Discussion topic (e.g., space)
-- `stance`: Participant stance (e.g., pro)
 
 
 ## Tech Stack / Architecture
