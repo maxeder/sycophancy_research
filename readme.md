@@ -1,4 +1,4 @@
-# syc_simulation
+# Sycophancy Benchmark
 
 Script for querying an LLM across topic statements and conditions, recording model positions and reasoning.
 
