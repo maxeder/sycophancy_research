@@ -1,6 +1,6 @@
 
 ---
-title: "SycLLM User Study — Analysis Reinforcement"
+title: "SycLLM User Study — Analysis Opinion Reinforcement"
 output:
   html_document:
     toc: true
@@ -196,7 +196,7 @@ flow_graph_opinion <- df %>%
   labs(y = "Percentage of participants") +
   theme_minimal(base_size = 12) +
   theme(
-    legend.position = "bottom",
+    legend.position = "none",
     # strip.background = element_rect(fill = NA, colour = "grey50"),
     panel.grid.major.x = element_blank(), # Remove vertical lines
     panel.grid.minor = element_blank(),
@@ -335,7 +335,7 @@ ggplot(aes(y = opinion_change_cent, x = opinion_pre_cent, color = model_conditio
   guides(color = "none") +
   labs(x='Pre-Interaction Opinion (Centered)', y='Opinion Change (Centered)') +
   # ylim(-3.3,3.3) +
-  theme_minimal(base_size = 13) +
+  theme_minimal(base_size = 12) +
   theme(
     strip.text = element_text(face = "bold"),
     panel.grid.minor = element_blank()

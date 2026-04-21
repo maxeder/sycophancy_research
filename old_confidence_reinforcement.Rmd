@@ -1,6 +1,6 @@
 
 ---
-title: "SycLLM User Study — Analysis Reinforcement"
+title: "SycLLM User Study — Analysis Confidence Reinforcement"
 output:
   html_document:
     toc: true
@@ -316,9 +316,9 @@ lm(formula = confidence_reinforcement ~ model_condition * ai_usage_c + 0) %>% su
 
 
 # center scales  
-df$confidence_pre_centered <-  df$pre_confidence - 4
-df$confidence_post_centered  <-  df$post_confidence - 4
-df$confidence_change_cent  <-  df$confidence_post_centered - df$confidence_pre_centered
+# df$confidence_pre_centered <-  df$pre_confidence - 4
+# df$confidence_post_centered  <-  df$post_confidence - 4
+# df$confidence_change_cent  <-  df$confidence_post_centered - df$confidence_pre_centered
 
 
 # +
@@ -329,7 +329,7 @@ confidence_change_by_pre_graph <- df %>%
   mutate(
     model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
   ) %>%
-ggplot(aes(y = confidence_change_cent, x = confidence_pre_centered, color = model_condition)) +
+ggplot(aes(y = confidence_change, x = pre_confidence, color = model_condition)) +
   geom_jitter(alpha = 0.5, size = 1, color = "black", width = 0.3, shape =16) +
   geom_smooth(method = "lm", alpha = 0.15) +
   stat_summary(fun.data = "mean_cl_normal", size = 0.4) +

@@ -1,0 +1,374 @@
+
+---
+title: "SycLLM User Study — Analysis Confidence Change"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
+# 
+# file.path(output_dir, "")
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(lme4)
+library(emmeans)
+library(psych)
+library(effectsize)
+library(dunn.test)
+library(dplyr)
+library(jtools) 
+library(ggalluvial)
+library(ordinal)
+
+```
+
+
+# Data Loading & Cleaning
+
+
+```{r load-data}
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+
+# Inspect
+# glimpse(raw)
+```
+
+```{r clean-data}
+df <- raw %>%
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("Unprompted", "Sycophantic", "Contrarian")),
+    topic  = factor(topic)
+  )
+
+cat("N after exclusions:", nrow(df), "\n")
+```
+
+```{r attitude-scoring}
+# Helper: row-wise mean ignoring NA
+row_mean <- function(df, cols) {
+  rowMeans(df[, cols], na.rm = TRUE)
+}
+
+
+topics <- c("space", "quota", "taxes", "animals", "speech")
+
+# build composite pre-post opinion and confidence measures & experience composites via means
+df <- df %>%
+  mutate(
+    # Pre Opinion
+    opinion_pre = case_when(
+      topic == "space"   ~ space_02,
+      topic == "quota"   ~ pre_quota,
+      topic == "taxes"   ~ pre_taxes,
+      topic == "animals" ~ pre_animals,
+      topic == "speech"  ~ pre_speech
+    ),
+    # Post-opinion
+    opinion_post = case_when(
+      topic == "space"   ~ post_space_04,
+      topic == "quota"   ~ post_quota,
+      topic == "taxes"   ~ post_taxes,
+      topic == "animals" ~ post_animals,
+      topic == "speech"  ~ post_speech
+    ),
+    opinion_change = opinion_post - opinion_pre,
+    confidence_change = post_confidence - pre_confidence,
+    # Scale composites
+    competence  = row_mean(., c("competence_01", "competence_02", "competence_03")),
+    trust       = row_mean(., c("trust_01",       "trust_02",       "trust_03")),
+    satisfaction = row_mean(., paste0("satisfaction_0", 1:5)),
+    sycophancy  = row_mean(., c("sycophancy_01",  "sycophancy_02")),
+    credibility = row_mean(., c("credibility_01", "credibility_02", "credibility_03")),
+    continuance = row_mean(., c("continuance_01", "continuance_02"))
+  )
+```
+
+
+
+```{r}
+df$model_condition <- factor(df$model_condition,
+                             levels = c("Contrarian", "Unprompted", "Sycophantic"))
+df$post_confidence <- factor(df$post_confidence, levels = 1:7, ordered = TRUE)
+
+# Planned linear contrast = direct test of H2
+contrasts(df$model_condition) <- contr.poly(3)
+
+# Fit and inspect
+m <- clm(post_confidence ~ model_condition + pre_confidence, data = df)
+summary(m)
+```
+
+# FLow
+
+```{r}
+flow_colors <- c("Reinforced" = "#4A9E6B", "Unchanged" = "#C0C0C0", "Moderated" = "#C05050")
+flow_alpha  <- c("Reinforced" = 0.75,      "Unchanged" = 0.75, "Moderated" = 0.75)
+
+flow_graph_confidence <- df %>%
+  filter(!is.na(pre_confidence), !is.na(post_confidence)) %>%
+  mutate(
+    confidence_pre_factor    = factor(pre_confidence,  levels = 7:1),
+    confidence_post_factor   = factor(post_confidence, levels = 7:1),
+    # model_condition       = factor(model_condition, levels = c("Unprompted", "Sycophantic", "Contrarian")),
+    model_condition       = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic")),
+    change_type = case_when(
+      post_confidence == pre_confidence                          ~ "Unchanged",
+      post_confidence > pre_confidence               ~ "Reinforced", # more
+      TRUE                                                                   ~ "Moderated"   # less
+    ),
+    change_type = factor(change_type, levels = c("Reinforced", "Unchanged", "Moderated"))
+  ) %>%
+  count(model_condition, confidence_pre_factor, confidence_post_factor, change_type) %>%
+  group_by(model_condition) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(axis1 = confidence_pre_factor, axis2 = confidence_post_factor, y = prop)) +
+  geom_alluvium(aes(fill = change_type, alpha = change_type), width = 1/6) +
+  geom_stratum(fill = "white", colour = "grey30", width = 1/6) +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 3, fontface = "bold") +
+  scale_x_discrete(limits = c("Pre-\nconfidence", "Post-\nconfidence"), expand = c(0.05, 0.05)) +
+  scale_fill_manual(values = flow_colors, name = NULL) +
+  scale_alpha_manual(values = flow_alpha, guide = "none") +
+  guides(fill = guide_legend(override.aes = list(alpha = unname(flow_alpha)))) +
+  facet_wrap(~model_condition) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percentage of participants") +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none",
+    # strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 0),
+    panel.grid.major.x = element_blank(), # Remove vertical lines
+    panel.grid.minor = element_blank(),
+    strip.text       = element_text(size = 11, face = "bold"),
+    axis.text.x      = element_text(size = 10),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    panel.spacing = unit(2, "lines")
+  )
+
+
+
+flow_graph_confidence
+ggsave(file.path(output_dir, "flow_graph_confidence.pdf"), plot = flow_graph_confidence, width=9, height=5)
+ggsave(file.path(output_dir, "flow_graph_confidence.png"), plot = flow_graph_confidence, width=9, height=5)
+```
+
+
+
+
+
+```{r}
+em <- emmeans(m, ~ model_condition, mode = "mean.class")
+em_df <- as.data.frame(em)
+
+confidence_pred_mean <- ggplot(em_df, aes(x = model_condition, y = mean.class)) +
+  geom_line(aes(group = 1), linetype = "dashed") +
+  geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL, color = model_condition), width = 0.1) +
+  geom_point(aes(color = model_condition), size = 2.5) +
+  labs(x = NULL, y = "Predicted post-confidence") +
+  ylim(c(4, 7)) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "none"
+  )
+
+confidence_pred_mean
+ggsave(file.path(output_dir, "confidence_pred_mean.pdf"), plot = confidence_pred_mean, width=8, height=5)
+ggsave(file.path(output_dir, "confidence_pred_mean.png"), plot = confidence_pred_mean, width=8, height=5)
+```
+Predicted mean post-confidence rating (1–7 scale) by model condition, estimated from a cumulative link mode. Points show expected ratings derived from the model's predicted probabilities; error bars are 95% confidence intervals. The dashed line visualizes the order tested by the linear contrast (Contrarian < Unprompted < Sycophantic). Y-axis truncated to emphasize between-condition differences.
+
+
+
+```{r}
+
+# ggplot(df, aes(x = model_condition, y = confidence_change)) +
+#   geom_line(aes(group = 1), linetype = "dashed") +
+#   geom_errorbar(aes(ymin = asymp.LCL, ymax = asymp.UCL, color = model_condition), width = 0.1) +
+#   geom_point(aes(color = model_condition), size = 2.5) +
+#   labs(x = NULL, y = "Predicted post-confidence") +
+#   ylim(c(4, 7)) +
+#   scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+#   theme_minimal(base_size = 12) +
+#   theme(
+#     legend.position = "none"
+#   )
+
+
+ggplot(df, aes(x = model_condition, y = confidence_change, fill = model_condition)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  
+  # suppress boxplot outliers when using jitter plot
+  geom_boxplot(width = 0.4, fatten = 2, outlier.shape = NA) +
+  # geom_violin() +
+  geom_jitter(width = 0.15, size = 1.5, colour = "black", alpha = 0.4) +
+  # suppress boxplot outliers when using jitter plot
+  # geom_boxplot(width = 0.4, outlier.shape = NA) +
+  
+  # add mean
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
+  
+  scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  labs(title = "Opinion change (post – pre) by condition",
+       x = "Condition", y = "Attitude change") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+
+
+
+
+# Moderators
+
+
+```{r}
+m_robust <- clm(post_confidence ~ model_condition + pre_confidence + 
+                  ai_literacy + ai_usage, 
+                data = df)
+summary(m_robust)
+```
+
+
+
+```{r}
+
+m_aov <- aov(confidence_change ~ model_condition, data = df)
+summary.lm(m_aov) 
+```
+
+```{r}
+summary(lm(confidence_change ~ model_condition * pre_confidence, data = df))
+# Order the condition factor so the linear contrast points the right way:
+# contrarian (-1) -> unprompted (0) -> sycophantic (+1)
+df$model_condition <- factor(
+  df$model_condition,
+  levels = c("Contrarian", "Unprompted", "Sycophantic")
+)
+
+# Outcome must be an ORDERED factor for clm()
+df$post_confidence <- factor(df$post_confidence, levels = 1:7, ordered = TRUE)
+# Quick sanity checks
+table(df$model_condition)
+summary(df$pre_confidence)
+table(df$model_condition, df$post_confidence)
+ 
+
+
+# Linear contrast directly tests H2 (monotonic increase across the ordering).
+# Quadratic contrast is a sanity check for non-monotonic patterns.
+contrasts(df$model_condition) <- cbind(
+  linear    = c(-1,  0,  1),
+  quadratic = c( 1, -2,  1)
+)
+# Name the contrasts so they appear cleanly in output:
+colnames(contrasts(df$model_condition)) <- c("linear", "quadratic")
+ 
+# ---- 4. Fit the cumulative link model (ordinal ANCOVA) ----
+# Controlling for pre_confidence handles baseline differences and
+# regression to the mean. Treating pre as numeric is standard; if you
+# prefer, you can enter it as an ordered factor with scored contrasts.
+m <- clm(
+  post_confidence ~ model_condition + pre_confidence,
+  data = df,
+  link = "logit"
+)
+summary(m)
+
+
+
+
+
+# ---- 5. Primary test of H2: the linear contrast ----
+# The row labeled "conditionlinear" in summary(m) IS the H2 test.
+# Extract it cleanly:
+coefs <- coef(summary(m))
+h2_row <- coefs["model_conditionlinear", ]
+h2_row
+# Odds ratio + 95% CI for the linear contrast
+est  <- h2_row["Estimate"]
+se   <- h2_row["Std. Error"]
+or   <- exp(est)
+or_ci <- exp(est + c(-1, 1) * 1.96 * se)
+cat(sprintf(
+  "Linear trend: b = %.3f, SE = %.3f, OR = %.2f, 95%% CI [%.2f, %.2f], p = %.4f\n",
+  est, se, or, or_ci[1], or_ci[2], h2_row["Pr(>|z|)"]
+))
+ 
+
+# ---- 7. Follow-up pairwise comparisons (exploratory) ----
+emm <- emmeans(m, ~ model_condition, mode = "latent")
+emm
+# Pairwise on the latent scale with Holm correction
+pairs(emm, adjust = "holm")
+ 
+# ---- 8. Descriptives for the write-up ----
+summary_ <- df %>%
+  mutate(post_num = as.numeric(as.character(post_confidence))) %>%
+  group_by(model_condition) %>%
+  summarise(
+    n         = n(),
+    pre_mean  = mean(pre_confidence),
+    pre_sd    = sd(pre_confidence),
+    post_mean = mean(post_num),
+    post_sd   = sd(post_num),
+    post_med  = median(post_num),
+    change_m  = mean(post_num - pre_confidence),
+    change_sd = sd(post_num - pre_confidence)
+  )
+print(summary_)
+
+
+
+df %>%
+  mutate(
+    pre  = pre_confidence,
+    post = as.numeric(as.character(post_confidence))
+  ) %>%
+  tidyr::pivot_longer(c(pre, post), names_to = "time", values_to = "conf") %>%
+  mutate(time = factor(time, levels = c("pre", "post"))) %>%
+  ggplot(aes(x = time, y = conf, group = CASE)) +
+  geom_line(alpha = 0.2) +
+  stat_summary(aes(group = model_condition, color = model_condition),
+               fun = mean, geom = "line", linewidth = 1.2) +
+  stat_summary(aes(group = model_condition, color = model_condition),
+               fun = mean, geom = "point", size = 3) +
+  facet_wrap(~ model_condition) +
+  labs(y = "Confidence (1-7)", x = NULL) +
+  theme_minimal()
+
+
+
+```
+
