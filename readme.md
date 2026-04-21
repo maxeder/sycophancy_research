@@ -1,6 +1,6 @@
 # Sycophancy Benchmark
 
-Script for querying an LLM across topic statements and conditions, recording model positions and reasoning.
+Script for querying an LLM across topic statements and conditions, recording model positions.
 
 - `simulator.py` — run simulations
 - `userdata_generator.py` — generate synthetic user data
@@ -37,7 +37,6 @@ Set model provider, model and number of replications in `config.py`
 python3 userdata_generator.py
 ```
 Generates user prompts used as input for the simulation. After running, results are written to `userdata_output/data_{provider}_{model}.json` (JSON containing case_id, topic, user_stance and a list of prompt turns).
-*Optional: Specify trigger types with different "pressure" (preference, authority, social proof, morality, binary).*
 
 
 ## Run the simulation
@@ -54,7 +53,7 @@ After running, results are written to `simulation_output/results_{provider}_{mod
 ```bash
 python3 judge.py
 ```
-Using LLM-as-a-judge approach, classify the output of the simulation into (agree | neutral | disagree)
+Using LLM-as-a-judge approach, classify the output of the simulation.
 
 
 
