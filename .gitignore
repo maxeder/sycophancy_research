@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.env
+
+# R sessions
+.RData
+.Rhistory
+.Rproj.user/
+.Ruserdata
+
+# Firebase deploy cache
+.firebase/
+
+# Node
+node_modules/
