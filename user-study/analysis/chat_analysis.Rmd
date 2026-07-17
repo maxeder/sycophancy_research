@@ -1,0 +1,299 @@
+---
+title: "SycLLM — Chat Transcript Analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
+                      fig.width = 8, fig.height = 5)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+# 
+# file.path(output_dir, "")
+```
+
+```{r packages}
+library(tidyverse)
+library(jsonlite)
+library(knitr)
+library(kableExtra)
+library(dunn.test)
+library(rstatix)
+```
+
+# Data Loading
+
+```{r load-data}
+raw_json <- fromJSON("all_chats.json", flatten = FALSE)
+
+# Build a chat-level summary (one row per conversation)
+chats <- tibble(
+  case_id   = raw_json$case_id,
+  case      = raw_json$case,
+  condition = raw_json$condition,
+  topic     = raw_json$topic,
+  pre_opinion  = raw_json$pre_opinion,
+  post_opinion = raw_json$post_opinion,
+  transcript   = raw_json$transcript
+)
+
+# Derive per-chat metrics from transcripts
+chats <- chats %>%
+  mutate(
+    n_messages    = map_int(transcript, nrow),
+    # Exclude the system message for turn counting
+    n_user_msgs   = map_int(transcript, ~ sum(.x$role == "user")),
+    n_asst_msgs   = map_int(transcript, ~ sum(.x$role == "assistant")),
+    n_turns       = n_user_msgs,  # each user message = 1 turn
+    # Word counts
+    user_words    = map_int(transcript, ~ sum(str_count(.x$content[.x$role == "user"], "\\S+"))),
+    asst_words    = map_int(transcript, ~ sum(str_count(.x$content[.x$role == "assistant"], "\\S+"))),
+    total_words   = user_words + asst_words,
+    avg_user_msg_len = user_words / n_user_msgs,
+    avg_asst_msg_len = asst_words / n_asst_msgs,
+    # Opinion shift
+    opinion_shift = post_opinion - pre_opinion
+  )
+
+chats <- chats %>%
+  mutate(
+    condition = factor(condition, levels = c("sycophantic", "unprompted", "contrarian")),
+    topic     = factor(topic)
+  )
+
+
+mean(chats$n_turns)
+
+# glimpse(chats %>% select(-transcript))
+```
+
+
+```{r summary-stats}
+chats %>%
+  group_by(condition) %>%
+  summarise(
+    n            = n(),
+    mean_turns   = mean(n_turns),
+    sd_turns     = sd(n_turns),
+    mean_user_words = mean(user_words),
+    mean_asst_words = mean(asst_words),
+    mean_total_words = mean(total_words),
+    .groups = "drop"
+  ) %>%
+  kable(digits = 1, caption = "Conversation metrics by condition") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = FALSE)
+```
+
+# Turn Count Analysis
+
+```{r turns-by-condition, fig.cap="Number of user turns by condition"}
+chats <- chats %>%
+  mutate(
+    condition = factor(condition, levels = c("contrarian","unprompted", "sycophantic"))
+  )
+
+ggplot(chats, aes(x = condition, y = n_turns, fill = condition)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5) +
+    scale_color_manual(values = colors) +
+ scale_fill_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A")) +
+  labs(x = "Condition", y = "Number of user turns",
+       title = "User turns per conversation by condition") +
+  theme_minimal() +
+    scale_x_discrete(labels = c("contrarian" = "Contrarian", "unprompted" = "Unprompted", "sycophantic" = "Sycophantic")) +
+  theme(legend.position = "none")
+```
+
+
+```{r}
+
+chats <- chats %>%
+  mutate(
+    condition = factor(condition, levels = c("contrarian","unprompted", "sycophantic"))
+  )
+
+
+# Test
+kw <-kruskal.test(n_turns ~ condition, data = chats)
+
+kw
+
+n <- nrow(chats)
+epsilon_sq <- kw$statistic / (n - 1)
+epsilon_sq
+# Pairwise follow-up
+dunn.test(chats$n_turns, chats$condition, method = "bh")
+
+# Visualisation
+
+# mean with cis
+turns_plot <- ggplot(chats, aes(x = condition, y = n_turns,  color = condition)) +
+  stat_summary(fun = mean, geom = "point", size = 3.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
+  labs(x = "Condition", y = "Number of Turns") +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5, shape = 16) +
+  scale_color_manual(values = c("contrarian" = "#D4807A", "unprompted" = "#7BA7C9", "sycophantic" = "#82B88A")) +
+  theme_minimal() +
+  coord_cartesian(ylim = c(0, 10)) +
+  scale_y_continuous(breaks = seq(0, 10, by = 2)) +
+  scale_x_discrete(labels = c("contrarian" = "Contrarian", "unprompted" = "Unprompted", "sycophantic" = "Sycophantic")) +
+  theme(legend.position = "none")
+
+turns_plot
+ggsave(file.path(output_dir, "turns_plot.pdf"), plot = turns_plot, width=8, height=5)
+ggsave(file.path(output_dir, "turns_plot.png"), plot = turns_plot, width=8, height=5)
+```
+
+
+
+
+# Interaction Time
+
+```{r}
+# Load user study sosci dataset
+
+
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+df <- raw %>%
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("Unprompted", "Sycophantic", "Contrarian")),
+    topic  = factor(topic)
+  )
+
+
+
+df <- df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian","Unprompted", "Sycophantic"))
+  )
+
+df$model_condition
+df$TIME005 <- as.numeric(df$TIME005)
+
+# Test
+kw <- kruskal.test(TIME005 ~ model_condition, data = df)
+kw
+n <- nrow(df)
+n
+epsilon_sq <- kw$statistic / (n - 1)
+epsilon_sq
+
+# Pairwise follow-up
+dunn.test(df$TIME005, df$model_condition, method = "holm")
+
+# Visualisation
+
+# mean with cis
+time_plot <- ggplot(df, aes(x = model_condition, y = TIME005,  color = model_condition)) +
+  stat_summary(fun = mean, geom = "point", size = 3.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0.2, linewidth = 0.7) +
+  labs(x = "Condition", y = "Interaction Time in Seconds") +
+  geom_jitter(width = 0.15, alpha = 0.4, size = 1.5, shape = 16) +
+  scale_color_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  theme_minimal() +
+  # coord_cartesian(ylim = c(0, 10)) +
+  theme(legend.position = "none")
+
+
+time_plot
+ggsave(file.path(output_dir, "time_plot.pdf"), plot = time_plot, width=8, height=5)
+ggsave(file.path(output_dir, "time_plot.png"), plot = time_plot, width=8, height=5)
+
+```
+
+
+
+
+```{r turns-anova}
+turns_aov <- aov(n_turns ~ condition, data = chats)
+summary(turns_aov)
+```
+-> number of conversation turns significantly differs across conditions
+-> pairwise comparisons to find which conditions differ from each other
+
+## Pairwise comparisions
+
+```{r}
+TukeyHSD(turns_aov)
+```
+The contrarian condition produces significantly fewer turns than the sycophantic condition (p = 0.003). The difference is about 2 fewer turns on average.
+
+
+<!-- # Word Count Analysis -->
+
+<!-- ```{r wordcount-bars, fig.cap="Average word count by condition and role"} -->
+<!-- chats %>% -->
+<!--   group_by(condition) %>% -->
+<!--   summarise(User = mean(user_words), Assistant = mean(asst_words), .groups = "drop") %>% -->
+<!--   pivot_longer(-condition, names_to = "role", values_to = "words") %>% -->
+<!--   ggplot(aes(x = condition, y = words, fill = role)) + -->
+<!--   geom_col(position = "dodge", alpha = 0.8) + -->
+<!--   scale_fill_brewer(palette = "Paired") + -->
+<!--   labs(x = "Condition", y = "Mean total words per chat", -->
+<!--        title = "Total word count by condition and role") + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
+
+```{r avg-msg-length, fig.cap="Average message length by condition"}
+chats %>%
+  select(condition, avg_user_msg_len, avg_asst_msg_len) %>%
+  pivot_longer(-condition, names_to = "role", values_to = "words",
+               names_pattern = "avg_(\\w+)_msg_len") %>%
+  ggplot(aes(x = condition, y = words, fill = role)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_brewer(palette = "Paired", labels = c("Assistant", "User")) +
+  labs(x = "Condition", y = "Average words per message",
+       title = "Message length by condition and role") +
+  theme_minimal()
+
+
+
+chats %>%
+  select(condition, user_words, asst_words) %>%
+  pivot_longer(-condition, names_to = "role", values_to = "words",
+               names_pattern = "(\\w+)_words") %>%
+  ggplot(aes(x = condition, y = words, fill = role)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_brewer(palette = "Paired", labels = c("Assistant", "User")) +
+  labs(x = "Condition", y = "Average words per message",
+       title = "Message length by condition and role") +
+  theme_minimal()
+```
+
+
+
+
+
+```{r}
+
+
+```
+
+
+
+
+
+
+
+
+
+

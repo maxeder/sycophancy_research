@@ -1,0 +1,256 @@
+---
+title: "SycLLM User Study — Descriptive Analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(lme4)
+library(emmeans)
+```
+
+# Data Loading & Cleaning
+
+
+```{r load-data}
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+
+# Inspect
+glimpse(raw)
+```
+
+```{r clean-data}
+df <- raw %>%
+  # keep only finished participants
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("unprompted", "sycophantic", "contrarian")),
+    topic  = factor(topic)
+  )
+
+cat("N after exclusions:", nrow(df), "\n")
+```
+
+```{r attitude-scoring}
+# Helper: row-wise mean ignoring NA
+row_mean <- function(df, cols) {
+  rowMeans(df[, cols], na.rm = TRUE)
+}
+
+
+topics <- c("space", "quota", "taxes", "animals", "speech")
+
+# build composite pre-post opinion and confidence measures & experience composites via means
+df <- df %>%
+  mutate(
+    # Pre Opinion
+    opinion_pre = case_when(
+      topic == "space"   ~ space_02,
+      topic == "quota"   ~ pre_quota,
+      topic == "taxes"   ~ pre_taxes,
+      topic == "animals" ~ pre_animals,
+      topic == "speech"  ~ pre_speech
+    ),
+    # Post-opinion
+    opinion_post = case_when(
+      topic == "space"   ~ post_space_04,
+      topic == "quota"   ~ post_quota,
+      topic == "taxes"   ~ post_taxes,
+      topic == "animals" ~ post_animals,
+      topic == "speech"  ~ post_speech
+    ),
+    opinion_change = opinion_post - opinion_pre,
+    confidence_change = post_confidence - pre_confidence,
+    # Scale composites
+    competence  = row_mean(., c("competence_01", "competence_02", "competence_03")),
+    trust       = row_mean(., c("trust_01",       "trust_02",       "trust_03")),
+    satisfaction = row_mean(., paste0("satisfaction_0", 1:5)),
+    sycophancy  = row_mean(., c("sycophancy_01",  "sycophancy_02")),
+    credibility = row_mean(., c("credibility_01", "credibility_02", "credibility_03")),
+    continuance = row_mean(., c("continuance_01", "continuance_02"))
+  )
+```
+
+# Sample Description
+
+## Age
+
+```{r sample-desc}
+df %>%
+  summarise(
+    N        = n(),
+    Age_M    = round(mean(age, na.rm = TRUE), 1),
+    Age_SD   = round(sd(age, na.rm = TRUE), 1),
+    Age_min  = min(age, na.rm = TRUE),
+    Age_max  = max(age, na.rm = TRUE)
+  ) %>%
+  kable(caption = "Sample demographics") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+## Gender
+
+```{r gender-table}
+df %>%
+  count(gender) %>%
+  mutate(pct = round(100 * n / sum(n), 1)) %>%
+  kable(caption = "Gender distribution") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+## Model and Topic Conditions
+
+```{r condition-table}
+df %>%
+  count(model_condition, topic) %>%
+  pivot_wider(names_from = topic, values_from = n, values_fill = 0) %>%
+  kable(caption = "Participants per condition × topic") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+```{r condition-table}
+df %>%
+  count(model_condition) %>%
+  kable(caption = "Participants per condition × topic") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+## Opinion Distribution
+
+### Pre Opinion
+
+```{r condition-table}
+df %>%
+  count(opinion_pre) %>%
+  kable(caption = "Participants per opinion Likert item") %>%
+  kable_styling(bootstrap_options = "striped")
+
+barplot(table(df$opinion_pre))
+```
+
+```{r}
+library(psych)
+describe(df$opinion_pre)
+```
+
+
+### Post Opinion
+
+```{r condition-table}
+df %>%
+  count(opinion_post) %>%
+  kable(caption = "Participants per opinion Likert item") %>%
+  kable_styling(bootstrap_options = "striped")
+
+barplot(table(df$opinion_post))
+```
+
+
+## Time Overview
+
+```{r time-table}
+df %>%
+  summarise(
+    N        = n(),
+    Time_M    = round(round(mean(TIME_SUM, na.rm = TRUE), 1)/60, 1),
+    Time_SD   = round(round(sd(TIME_SUM, na.rm = TRUE), 1)/60, 1),
+    Time_min  = min(TIME_SUM, na.rm = TRUE)/60,
+    Time_max  = max(TIME_SUM, na.rm = TRUE)/60
+  ) %>%
+  kable(caption = "Sample demographics") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+# Scale Reliability
+
+```{r reliability}
+alpha_table <- tibble(
+  Scale = c("Competence", "Trust", "Satisfaction", "Sycophancy",
+            "Credibility", "Continuance"),
+  Items = c(3, 3, 5, 2, 3, 2),
+  Alpha = c(
+    alpha(df[, c("competence_01", "competence_02", "competence_03")])$total$raw_alpha,
+    alpha(df[, c("trust_01", "trust_02", "trust_03")])$total$raw_alpha,
+    alpha(df[, paste0("satisfaction_0", 1:5)])$total$raw_alpha,
+    alpha(df[, c("sycophancy_01", "sycophancy_02")])$total$raw_alpha,
+    alpha(df[, c("credibility_01", "credibility_02", "credibility_03")])$total$raw_alpha,
+    alpha(df[, c("continuance_01", "continuance_02")])$total$raw_alpha
+  )
+) %>%
+  mutate(Alpha = round(Alpha, 3))
+
+alpha_table %>%
+  kable(caption = "Cronbach's alpha for composite scales") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+# Descriptive Statistics by Condition
+
+```{r descriptives}
+df %>%
+  group_by(model_condition) %>%
+  summarise(
+    n            = n(),
+    opinion_pre_M    = round(mean(opinion_pre,    na.rm = TRUE), 2),
+    opinion_pre_SD   = round(sd(opinion_pre,      na.rm = TRUE), 2),
+    opinion_post_M   = round(mean(opinion_post,   na.rm = TRUE), 2),
+    opinion_post_SD  = round(sd(opinion_post,     na.rm = TRUE), 2),
+    opinion_change_M = round(mean(opinion_change, na.rm = TRUE), 2),
+    opinion_change_SD= round(sd(opinion_change,   na.rm = TRUE), 2),
+    competence_M = round(mean(competence, na.rm = TRUE), 2),
+    trust_M      = round(mean(trust,      na.rm = TRUE), 2),
+    satisfaction_M = round(mean(satisfaction, na.rm = TRUE), 2),
+    sycophancy_M = round(mean(sycophancy, na.rm = TRUE), 2),
+    credibility_M = round(mean(credibility, na.rm = TRUE), 2),
+    continuance_M = round(mean(continuance, na.rm = TRUE), 2)
+  ) %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column("Variable") %>%
+  kable(caption = "Descriptive statistics by condition") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+
+
+
+# AI Literacy & Usage
+
+```{r}
+
+# ai_literacy, ai_usage
+mean(df$ai_literacy)
+sd(df$ai_literacy)
+mean(df$ai_usage)
+sd(df$ai_usage)
+
+
+hist(df$ai_literacy)
+hist(df$ai_usage)
+```
+

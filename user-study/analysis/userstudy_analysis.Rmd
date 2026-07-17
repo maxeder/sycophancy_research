@@ -1,0 +1,920 @@
+---
+title: "SycLLM User Study — Analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+# Setup
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+
+# Plots Path
+output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+
+# 
+# file.path(output_dir, "")
+```
+
+# Packages
+
+```{r packages}
+library(tidyverse)
+library(psych)
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(lme4)
+library(emmeans)
+library(psych)
+library(effectsize)
+library(dunn.test)
+```
+
+# Data Loading & Cleaning
+
+
+```{r load-data}
+
+FILE_PATH = "data/full_data.csv"
+raw <- read_tsv(FILE_PATH, locale = locale(encoding = "UTF-16LE"),  show_col_types = FALSE)
+
+# Inspect
+glimpse(raw)
+```
+
+```{r clean-data}
+df <- raw %>%
+  filter(FINISHED == 1) %>%
+  filter(TIME_SUM >= 300) %>%
+  # drop admin / test entries
+  filter(MODE != "admin", prolific_id != "test", FINISHED == 1, STATUS == "complete") %>%
+  mutate(
+    age             = as.numeric(age),
+    gender          = factor(gender, levels = 1:2, labels = c("male", "female")),
+    model_condition = factor(model_condition,
+                             levels = 1:3,
+                             labels = c("Unprompted", "Sycophantic", "Contrarian")),
+    topic  = factor(topic)
+  )
+
+cat("N after exclusions:", nrow(df), "\n")
+```
+
+```{r attitude-scoring}
+# Helper: row-wise mean ignoring NA
+row_mean <- function(df, cols) {
+  rowMeans(df[, cols], na.rm = TRUE)
+}
+
+
+topics <- c("space", "quota", "taxes", "animals", "speech")
+
+# build composite pre-post opinion and confidence measures & experience composites via means
+df <- df %>%
+  mutate(
+    # Pre Opinion
+    opinion_pre = case_when(
+      topic == "space"   ~ space_02,
+      topic == "quota"   ~ pre_quota,
+      topic == "taxes"   ~ pre_taxes,
+      topic == "animals" ~ pre_animals,
+      topic == "speech"  ~ pre_speech
+    ),
+    # Post-opinion
+    opinion_post = case_when(
+      topic == "space"   ~ post_space_04,
+      topic == "quota"   ~ post_quota,
+      topic == "taxes"   ~ post_taxes,
+      topic == "animals" ~ post_animals,
+      topic == "speech"  ~ post_speech
+    ),
+    opinion_change = opinion_post - opinion_pre,
+    confidence_change = post_confidence - pre_confidence,
+    # Scale composites
+    competence  = row_mean(., c("competence_01", "competence_02", "competence_03")),
+    trust       = row_mean(., c("trust_01",       "trust_02",       "trust_03")),
+    satisfaction = row_mean(., paste0("satisfaction_0", 1:5)),
+    sycophancy  = row_mean(., c("sycophancy_01",  "sycophancy_02")),
+    credibility = row_mean(., c("credibility_01", "credibility_02", "credibility_03")),
+    continuance = row_mean(., c("continuance_01", "continuance_02"))
+  )
+```
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+# Cronbach's Alpha for Experience Scales
+
+```{r}
+
+scale_items <- list(
+   competence  = c("competence_01", "competence_02", "competence_03"),
+    trust       = c("trust_01",       "trust_02",       "trust_03"),
+    satisfaction = paste0("satisfaction_0", 1:5),
+    sycophancy  = c("sycophancy_01",  "sycophancy_02"),
+    credibility = c("credibility_01", "credibility_02", "credibility_03"),
+    continuance = c("continuance_01", "continuance_02")
+)
+
+# Run alpha for each scale
+# alphas <- lapply(scale_items, function(vars) {
+#   items <- df %>% select(all_of(vars))
+#   psych::alpha(items)
+# })
+
+# Inspect e.g.:
+# alphas$competence
+
+
+alpha_values <- sapply(scale_items, function(vars) {
+  items <- df %>% select(all_of(vars))
+  psych::alpha(items)$total$raw_alpha
+})
+
+alpha_values
+```
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+# Opinion Change
+
+## Overall opinion change
+
+
+```{r}
+# Wilcoxon signed-rank test
+
+wilcox.test(df$opinion_pre, df$opinion_post, paired = TRUE)
+
+median(df$opinion_pre)
+median(df$opinion_post)
+mean(df$opinion_post - df$opinion_pre)
+
+# Effect size (rank-biserial correlation)
+rank_biserial(df$opinion_pre, df$opinion_post, paired = TRUE)
+```
+A Wilcoxon signed-rank test indicated that post-interaction opinion scores were significantly higher than pre-interaction scores (V = 571, p = .024, r = 0.33).
+
+
+## Pre–Post within Each Condition
+
+```{r att-change-tests}
+for (cond in levels(df$model_condition)) {
+  sub <- df %>% filter(model_condition == cond, !is.na(opinion_pre), !is.na(opinion_post))
+  t_res <- t.test(sub$opinion_post, sub$opinion_pre, paired = TRUE)
+  cat(sprintf(
+    "\n%s (n=%d): M_pre=%.2f, M_post=%.2f, diff=%.2f, t(%d)=%.2f, p=%.3f\n",
+    cond, nrow(sub),
+    mean(sub$opinion_pre), mean(sub$opinion_post), mean(sub$opinion_change),
+    t_res$parameter, t_res$statistic, t_res$p.value
+  ))
+}
+  
+```
+
+
+## Opinion Change by Condition
+
+```{r att-change-bar, fig.width=6, fig.height=4}
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian","Unprompted", "Sycophantic"))
+  ) %>%
+  ggplot(aes(x = model_condition, y = opinion_change, fill = model_condition)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  
+  # suppress boxplot outliers when using jitter plot
+  geom_boxplot(width = 0.4, fatten = 2, outlier.shape = NA) +
+  # geom_violin() +
+  geom_jitter(width = 0.15, size = 1.5, colour = "black", alpha = 0.4) +
+  # suppress boxplot outliers when using jitter plot
+  # geom_boxplot(width = 0.4, outlier.shape = NA) +
+  
+  # add mean
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
+  
+  scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  labs(title = "Opinion change (post – pre) by condition",
+       x = "Condition", y = "Attitude change") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+
+
+
+# ```{r}
+# 
+# library(ggridges)
+# df %>%
+#   mutate(
+#     model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+#   ) %>%
+#   ggplot(aes(y = model_condition, x = opinion_change, fill = model_condition)) +
+#   geom_density_ridges() +
+#   scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+#   theme_ridges() + 
+#   theme(legend.position = "none")
+# ```
+
+
+
+## ANOVA / Kruskal-Wallis on Opinion Change
+
+```{r}
+
+# hist(df$opinion_change)
+
+# ANOVA
+# aov_op <- aov(opinion_change ~ model_condition, data = df)
+# print(summary(aov_op))
+
+# Kruskal
+# kw_op <- kruskal.test(opinion_change ~ model_condition, data = df)
+# kw_op
+# 
+# # maybe report kruskal due to non-normality?
+# print(median(df$opinion_change))
+# print(quantile(df$opinion_change, .25))
+# print(quantile(df$opinion_change, .75))
+# 
+
+
+
+kw_op <- kruskal.test(opinion_change ~ model_condition, data = df)
+kw_op <- kruskal.test(opinion_change ~ model_condition, data = df)
+
+n <- nrow(df %>% filter(!is.na(opinion_change)))
+epsilon_sq <- kw_op$statistic / (n - 1)
+
+cat(sprintf("chi-squared(%.0f)=%.2f  p=%.3f  ε²=%.3f\n",
+            kw_op$parameter, kw_op$statistic, kw_op$p.value, epsilon_sq))
+
+desc_op <- df %>%
+  filter(!is.na(opinion_change)) %>%
+  group_by(model_condition) %>%
+  summarise(mdn = median(opinion_change),
+            q1  = quantile(opinion_change, .25),
+            q3  = quantile(opinion_change, .75),
+            .groups = "drop")
+
+cat(sprintf("  %-12s Mdn=%.2f  IQR=[%.2f, %.2f]\n",
+                desc_op$model_condition, desc_op$mdn, desc_op$q1, desc_op$q3))
+
+
+summary(kw_op)
+names(df)
+df %>% mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+lm(formula = opinion_change ~ model_condition +opinion_pre + model_condition : opinion_pre) %>%
+  summary()
+
+
+
+
+# df %>% 
+#   # center opinion scale
+#   mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+#   mutate(extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post), 
+#          extremity_change = extremity_post - extremity_pre) %>%
+# lm(formula = extremity_change ~ model_condition) %>%
+#   summary()
+```
+
+## Extremity Approach
+
+
+```{r}
+df %>% 
+  # center opinion scale
+  mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+  mutate(extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post), 
+         extremity_change = extremity_post - extremity_pre) %>%
+lm(formula = extremity_change ~ model_condition) %>%
+  summary()
+
+
+# model <- lm(GunControlExtremityPost ~ condition + GunControlExtremityPre, data = data)
+df %>% 
+  # center opinion scale
+  mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+  mutate(extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post), 
+         extremity_change = extremity_post - extremity_pre) %>%
+lm(formula = extremity_change ~ model_condition) %>%
+  summary()
+
+
+df %>% 
+  # center opinion scale
+  mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+  mutate(extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post), 
+         extremity_change = extremity_post - extremity_pre) %>%
+lm(formula = extremity_post ~ model_condition + extremity_pre) %>%
+  summary()
+```
+
+```{r}
+library(broom)
+
+df %>%
+  mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4,
+         extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post),
+         extremity_change = extremity_post - extremity_pre) %>%
+  lm(formula = extremity_change ~ model_condition, data = .) %>%
+  tidy(conf.int = TRUE) %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(x = term, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  labs(x = "", y = "Estimated Effect on Extremity Change") +
+  theme_minimal()
+```
+
+```{r}
+df %>%
+   mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4,
+         extremity_pre = abs(opinion_pre), extremity_post = abs(opinion_post),
+         extremity_change = extremity_post - extremity_pre) %>%
+  lm(formula = extremity_change ~ model_condition, data = .) %>%
+  tidy(conf.int = TRUE) %>%
+  mutate(term = str_remove(term, "model_condition"),
+         term = ifelse(term == "(Intercept)", "unprompted", term)) %>%
+  ggplot(aes(x = term, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_flip() +
+  labs(x = "", y = "Estimated Effect on Extremity Change") +
+  theme_minimal()
+```
+
+## Bavel / Rathje Reference Code
+## Extremity (Pre-Registered)
+
+
+```{r}
+
+# Recode Variables
+data$GunControlExtremityPost <- abs(50 - as.numeric(data$GunControlPost_1))
+data$GunControlExtremityPre <- abs(50 - as.numeric(data$GunControlSupportPre_1))
+
+# Fit Model
+model <- lm(GunControlExtremityPost ~ condition + GunControlExtremityPre, data = data)
+
+# Robust SEs and confidence intervals
+robust_se_output <- coeftest(model, vcov = vcovHC(model, type = "HC2"))
+combined_output <- cbind(robust_se_output, coefci(model, vcov. = vcovHC(model, type = "HC2")))
+round(combined_output, 3)
+
+# Robust covariance matrix for emmeans
+robust_cov <- vcovHC(model, type = "HC2")
+
+# Estimated marginal means with robust SEs
+em <- emmeans(model, ~ condition, vcov. = robust_cov)
+
+# Planned contrasts with robust SEs and CIs
+custom_contrasts <- contrast(em, method = list(
+  "Agreeable vs Neutral" = c(0, 1, 0, -1),
+  "Agreeable vs Disagreeable" = c(0, 1, -1, 0),
+  "Disagreeable vs Neutral" = c(0, 0, 1, -1)
+), adjust = "none")
+
+summary(custom_contrasts, infer = c(TRUE, TRUE))
+
+blue_color <- wes_palette("Zissou1", 5)[1]
+wes_palette("Zissou1")
+emm_df <- as.data.frame(em)
+emm_df$condition <- factor(
+  emm_df$condition,
+  levels = c("Control",
+             "Agreeable", 
+             "Disagreeable", 
+             "Unprompted")
+)
+
+#Graph for Plotting
+ExtremityPlot <- ggplot(emm_df, aes(x = condition, y = emmean, color = condition)) +
+  geom_point(size = 4, color = blue_color) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), 
+                width = 0.1, size = 1, color = blue_color) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Extremity",
+    y = "Estimated Marginal Mean",
+    x = "Condition"
+  )
+
+```
+## adjusted code from bavel paper
+```{r}
+
+# Recode Variables
+# data$GunControlExtremityPost <- abs(50 - as.numeric(data$GunControlPost_1))
+# data$GunControlExtremityPre <- abs(50 - as.numeric(data$GunControlSupportPre_1))
+
+# (opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4,
+
+install.packages("lmtest")
+install.packages("sandwich")  # for robust/HAC standard errors
+install.packages("wesanderson")
+
+library(lmtest)
+library(sandwich)
+library("wesanderson")
+  
+df$ext_pre <-  abs(4 - as.numeric(df$opinion_pre))
+df$ext_post  <-  abs(4 - as.numeric(df$opinion_post))
+
+# Fit Model
+model <- lm(ext_post ~ model_condition + ext_pre, data = df)
+
+# Robust SEs and confidence intervals
+robust_se_output <- coeftest(model, vcov = vcovHC(model, type = "HC2"))
+combined_output <- cbind(robust_se_output, coefci(model, vcov. = vcovHC(model, type = "HC2")))
+round(combined_output, 3)
+
+# Robust covariance matrix for emmeans
+robust_cov <- vcovHC(model, type = "HC2")
+
+# Estimated marginal means with robust SEs
+em <- emmeans(model, ~ model_condition, vcov. = robust_cov)
+
+# Planned contrasts with robust SEs and CIs
+# custom_contrasts <- contrast(em, method = list(
+#   "Agreeable vs Neutral" = c(0, 1, 0, -1),
+#   "Agreeable vs Disagreeable" = c(0, 1, -1, 0),
+#   "Disagreeable vs Neutral" = c(0, 0, 1, -1)
+# ), adjust = "none")
+# 
+# summary(custom_contrasts, infer = c(TRUE, TRUE))
+# 
+
+
+blue_color <- wes_palette("Zissou1", 5)[1]
+wes_palette("Zissou1")
+emm_df <- as.data.frame(em)
+print(emm_df$model_condition)
+emm_df$model_condition <- factor(
+  emm_df$model_condition,
+  levels = c(
+             "Unprompted", 
+             "Sycophantic", 
+             "Contrarian")
+)
+
+#Graph for Plotting
+ExtremityPlot <- ggplot(emm_df, aes(x = model_condition, y = emmean, color = model_condition)) +
+  geom_point(size = 4, color = blue_color) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), 
+                width = 0.1, size = 1, color = blue_color) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, hjust = 0.5),
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    legend.position = "none"
+  ) +
+  labs(
+    title = "Extremity",
+    y = "Estimated Marginal Mean",
+    x = "Condition"
+  )
+ExtremityPlot
+
+
+ggplot(emm_df, aes(x = model_condition, y = emmean, ymin = lower.CL, ymax = upper.CL)) +
+  geom_pointrange() +
+  theme_minimal() +
+  labs(
+    title = "Certainty",
+    y = "Estimated Mean", x = "Condition"
+  )
+```
+
+
+
+
+
+
+
+
+## adjusted code plot
+
+```{r}
+data$condition <- relevel(factor(data$condition), ref = "Unprompted")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+pos <- position_jitter(width=.3, height=.0, seed=1)
+df %>% 
+  mutate(opinion_pre = opinion_pre - 4, opinion_post = opinion_post - 4) %>%
+  ggplot(aes(x=opinion_pre, y=opinion_change)) + facet_grid(~model_condition) + ylim(-3.3,3.3) + geom_jitter(width=.3, height=0.1, color="grey") + geom_smooth(method = "lm", color="blue") +
+  stat_summary(fun="mean", color="red") + stat_summary(fun.data="mean_cl_normal", color="red")
+  
+
+  geom_smooth(se=FALSE)
+hist(df$opinion_pre, breaks=50)
+table(df$opinion_pre, useNA = "always")
+?geom_smooth
+```
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+# Confidence Change
+
+
+## Overall confidence change
+
+
+```{r}
+# Wilcoxon signed-rank test
+
+wilcox.test(df$pre_confidence, df$post_confidence, paired = TRUE)
+
+median(df$pre_confidence)
+median(df$post_confidence)
+mean(df$post_confidence - df$pre_confidence)
+
+# Effect size (rank-biserial correlation)
+rank_biserial(df$post_confidence, df$pre_confidence, paired = TRUE)
+```
+A Wilcoxon signed-rank test indicated that post-interaction confidence scores were significantly higher than pre-interaction scores (V = 730.5, p = .022, r = 0.32).
+
+
+
+## Pre–Post within Each Condition
+
+```{r att-change-tests}
+for (cond in levels(df$model_condition)) {
+  sub <- df %>% filter(model_condition == cond, !is.na(pre_confidence), !is.na(post_confidence))
+  t_res <- t.test(sub$post_confidence, sub$pre_confidence, paired = TRUE)
+  cat(sprintf(
+    "\n%s (n=%d): M_pre=%.2f, M_post=%.2f, diff=%.2f, t(%d)=%.2f, p=%.3f\n",
+    cond, nrow(sub),
+    mean(sub$pre_confidence), mean(sub$post_confidence), mean(sub$confidence_change),
+    t_res$parameter, t_res$statistic, t_res$p.value
+  ))
+}
+
+```
+
+
+
+## Confidence Change by Condition
+
+```{r att-change-bar, fig.width=6, fig.height=4}
+df %>%
+  mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic"))
+  ) %>%
+  ggplot(aes(x = model_condition, y = confidence_change, fill = model_condition)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  
+  # suppress boxplot outliers when using jitter plot
+  geom_boxplot(width = 0.4, fatten = 2, outlier.shape = NA) +
+  # geom_jitter(width = 0.1, size = 2, colour = "black", alpha = 0.4) +
+  geom_jitter(width = 0.15, size = 1.5, colour = "black", alpha = 0.4) +
+  # suppress boxplot outliers when using jitter plot
+  # geom_boxplot(width = 0.4, outlier.shape = NA) +
+  
+  # add mean
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
+  
+  scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  labs(title = "Confidence change (post – pre) by condition",
+       x = "Condition", y = "Attitude change") +
+  theme_bw(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+## ANOVA / Kruskal-Wallis on Confidence Change
+
+```{r}
+# 
+# # hist(df$confidence_change)
+# 
+# # ANOVA
+# aov_conf <- aov(confidence_change ~ model_condition, data = df)
+# print(summary(aov_conf))
+# 
+# # Kruskal-Wallis 
+# kw_conf <- kruskal.test(confidence_change ~ model_condition, data = df)
+# print(kw_conf)
+# 
+# 
+# # maybe report kruskal due to non-normality?
+# 
+# # pairwise follow-ups if significant
+# # TukeyHSD(aov_conf)
+
+
+kw_conf <- kruskal.test(confidence_change ~ model_condition, data = df)
+
+n <- nrow(df %>% filter(!is.na(confidence_change)))
+epsilon_sq <- kw_conf$statistic / (n - 1)
+
+cat(sprintf("chi-squared(%.0f)=%.2f  p=%.3f  ε²=%.3f\n",
+            kw_conf$parameter, kw_conf$statistic, kw_conf$p.value, epsilon_sq))
+
+desc_conf <- df %>%
+  filter(!is.na(confidence_change)) %>%
+  group_by(model_condition) %>%
+  summarise(mdn = median(confidence_change),
+            q1  = quantile(confidence_change, .25),
+            q3  = quantile(confidence_change, .75),
+            .groups = "drop")
+
+cat(sprintf("  %-12s Mdn=%.2f  IQR=[%.2f, %.2f]\n",
+                desc_conf$model_condition, desc_conf$mdn, desc_conf$q1, desc_conf$q3))
+
+```
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+```{r}
+df$competence
+hist(df$satisfaction)
+hist(df$trust)
+hist(df$continuance)
+```
+
+# Experience Measures
+
+```{r outcomes-long}
+outcomes <- c("competence", "trust", "satisfaction", "sycophancy",
+              "credibility", "continuance")
+
+df_out <- df %>%
+  select(CASE, model_condition, all_of(outcomes)) %>%
+  pivot_longer(cols = all_of(outcomes),
+               names_to = "outcome", values_to = "value") %>%
+  filter(!is.na(value))
+```
+
+```{r outcomes-plot, fig.width=9, fig.height=6}
+
+# Outcome measures by condition
+exp_plots <- df_out %>%
+    mutate(
+    model_condition = factor(model_condition, levels = c("Contrarian", "Unprompted", "Sycophantic")),
+    outcome = tools::toTitleCase(outcome)
+  ) %>%
+  ggplot(aes(x = model_condition, y = value, fill = model_condition)) +
+  # geom_boxplot(alpha = 0.7, width = 0.4) +
+  geom_boxplot(width = 0.4, , outlier.color = "grey50", outlier.size = 0.7) +
+  
+  # add mean
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 4, colour = "white") +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 3, colour = "black") +
+  # suppress boxplot outliers when using jitter plot
+  # geom_boxplot(width = 0.4, outlier.shape = NA) +
+  # geom_jitter(width = 0.12, size = 1.5, alpha = 0.3) +
+  # scale_fill_manual(values = c("steelblue", "darkorange", "firebrick")) +
+  # scale_fill_manual(values = c("firebrick", "steelblue", "firebrick")) +
+  scale_fill_manual(values = c("Contrarian" = "#D4807A", "Unprompted" = "#7BA7C9", "Sycophantic" = "#82B88A")) +
+  facet_wrap(~outcome, scales = "free_y") +
+  labs(x = "Condition", y = "Likert Scale Rating (1-5)", fill = "Condition") +
+  theme_bw(base_size = 11) +
+  theme(
+    axis.text.x = element_text(angle = 25, hjust = 1),
+    legend.position = "none",
+    strip.background = element_rect(fill = NA, colour = "grey50", linewidth = 1),
+    strip.text = element_text(size = 10)
+  )
+
+exp_plots
+
+
+ggsave(file.path(output_dir, "experience_plots.pdf"), plot = exp_plots, width=8, height=5)
+ggsave(file.path(output_dir, "experience_plots.png"), plot = exp_plots, width=8, height=5)
+```
+
+```{r outcomes-kw}
+
+# 
+# for (out in outcomes) {
+#   sub <- df %>% filter(!is.na(.data[[out]]))
+#   kw <- kruskal.test(as.formula(paste(out, "~ model_condition")), data = sub)
+#   cat(sprintf("%-15s  chi-squared(%.0f)=%.2f  p=%.3f\n",
+#               out, kw$parameter, kw$statistic, kw$p.value))
+#   if (kw$p.value < 0.05) {
+#     cat("  Dunn test pairwise comparisons:\n")
+#     dunn.test(sub[[out]], sub$model_condition, method = "bh")
+# 
+#   }
+#   cat("\n")
+#   cat("\n")
+#   cat("\n")
+# }
+
+
+
+# for (out in outcomes) {
+#   sub <- df %>% filter(!is.na(.data[[out]]))
+#   kw <- kruskal.test(as.formula(paste(out, "~ model_condition")), data = sub)
+#   
+#   cat(sprintf("%-15s  chi-squared(%.0f)=%.2f  p=%.3f\n",
+#               out, kw$parameter, kw$statistic, kw$p.value))
+#   
+#   desc <- sub %>%
+#     group_by(model_condition) %>%
+#     summarise(mdn = median(.data[[out]]),
+#               q1  = quantile(.data[[out]], .25),
+#               q3  = quantile(.data[[out]], .75),
+#               .groups = "drop")
+#   
+#   for (i in seq_len(nrow(desc))) {
+#     cat(sprintf("  %-12s Mdn=%.2f  IQR=[%.2f, %.2f]\n",
+#                 desc$model_condition[i], desc$mdn[i], desc$q1[i], desc$q3[i]))
+#   }
+#   
+#   if (kw$p.value < 0.05) {
+#     cat("  Dunn test pairwise comparisons:\n")
+#     dunn.test(sub[[out]], sub$model_condition, method = "bh")
+#   }
+#   cat("\n\n\n")
+# }
+
+
+for (out in outcomes) {
+  sub <- df %>% filter(!is.na(.data[[out]]))
+  kw <- kruskal.test(as.formula(paste(out, "~ model_condition")), data = sub)
+  
+  n <- nrow(sub)
+  epsilon_sq <- kw$statistic / (n - 1)
+  
+  cat(sprintf("%-15s  chi-squared(%.0f)=%.2f  p=%.3f  ε²=%.3f\n",
+              out, kw$parameter, kw$statistic, kw$p.value, epsilon_sq))
+  
+  desc <- sub %>%
+    group_by(model_condition) %>%
+    summarise(mdn = median(.data[[out]]),
+              q1  = quantile(.data[[out]], .25),
+              q3  = quantile(.data[[out]], .75),
+              .groups = "drop")
+  
+  for (i in seq_len(nrow(desc))) {
+    cat(sprintf("  %-12s Mdn=%.2f  IQR=[%.2f, %.2f]\n",
+                desc$model_condition[i], desc$mdn[i], desc$q1[i], desc$q3[i]))
+  }
+  
+  if (kw$p.value < 0.05) {
+    cat("  Dunn test pairwise comparisons:\n")
+    dunn.test(sub[[out]], sub$model_condition, method = "bh")
+  }
+  cat("\n\n\n")
+}
+
+# print(dunn.test(df$trust, df$model_condition, method = "bh"))
+
+
+```
+
+<!-- # Perceived Sycophancy -->
+
+
+<!-- ```{r sycophancy-check} -->
+<!-- df %>% -->
+<!--   group_by(model_condition) %>% -->
+<!--   summarise( -->
+<!--     n = n(), -->
+<!--     M = round(mean(sycophancy, na.rm = TRUE), 2), -->
+<!--     SD = round(sd(sycophancy, na.rm = TRUE), 2) -->
+<!--   ) %>% -->
+<!--   kable(caption = "Perceived sycophancy by condition") %>% -->
+<!--   kable_styling(bootstrap_options = "striped") -->
+<!-- ``` -->
+
+
+
+# Correlations Among Outcome Measures
+
+```{r correlations, fig.width=7, fig.height=6}
+df_cor <- df %>%
+  select(opinion_change, competence, trust, satisfaction,
+         sycophancy, credibility, continuance) %>%
+  drop_na()
+
+cor_mat <- cor(df_cor, use = "pairwise.complete.obs", method = "spearman")
+round(cor_mat, 2) %>%
+  kable(caption = "Spearman correlations among outcome measures") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# Qualitative Results
+
+## Randomized Qualitative Experience Question
+
+```{r qual-results}
+
+labels <- c(
+  "A043" = "Trust",
+  "A059" = "Sycophancy",
+  "A060" = "Credibility",
+  "A045" = "Satisfaction",
+  "A042" = "Competence",
+  "A061" = "Continuance"
+)
+
+# df %>%
+#   summarise(qualQ = labels[qualQ],
+#             if (qualQ == "Competence") competence) %>%
+#   kable(caption = "Open Answers") %>%
+#   kable_styling(bootstrap_options = "striped")
+
+
+df %>%
+  mutate(
+    qualitative_question = labels[qualQ],
+    question_mean = case_match(
+      qualQ,
+      "A043" ~ round(trust, 1),
+      "A059" ~ round(sycophancy, 1),
+      "A060" ~ round(credibility, 1),
+      "A045" ~ round(satisfaction, 1),
+      "A042" ~ round(competence, 1),
+      "A061" ~ round(continuance, 1),
+      
+      .default = NA
+    )
+  ) %>%
+  select(CASE, qualitative_question, model_condition, question_mean, expQual) %>%
+  arrange(qualitative_question) %>%
+  # kable(caption = "Qualitative Experience Question") %>%
+  # kable_styling(bootstrap_options = "striped") %>%
+  write.csv("qualitative_experience.csv", row.names = FALSE)
+```
+
+
+
+## Purpose of study
+
+```{r}
+
+df %>%
+  select(CASE, purpose) %>%
+  kable(caption = "Purpose Question") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+## Optional Debrief Question
+
+```{r}
+df %>%
+  filter(!is.na(debrief_question)) %>%
+  select(CASE, debrief_question) %>%
+  kable(caption = "Debrief Question") %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
