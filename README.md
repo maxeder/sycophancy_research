@@ -21,7 +21,8 @@ Research on sycophancy in large language models — the tendency of LLMs to agre
 │   ├── simulation_output_final/# Simulation transcripts per condition
 │   ├── judge_output_final/     # Judge classifications per condition
 │   ├── annotation_data/        # Judge validation against human annotators per condition
-│   ├── validation_data/,       # Combined validation data across conditions
+│   ├── validation_data/        # Combined validation data across conditions
+│   ├── user_study_data/        # User-study chats & judged results (input/output of judge_userstudy.py)
 │   ├── analysis_R/             # Statistical analysis of benchmark & validation data
 │   └── *.md                    # Methods, judge documentation, validation approach
 │
@@ -42,4 +43,4 @@ Each component has its own README with setup and usage instructions:
 - [user-study/platform/README.md](user-study/platform/README.md) — web app (Node.js, Firebase CLI, deployment)
 - [user-study/analysis/README.md](user-study/analysis/README.md) — analysis code
 
-Both the benchmark and the platform query models through [OpenRouter](https://openrouter.ai/) and require an API key.
+Both the benchmark and the platform query models through [OpenRouter](https://openrouter.ai/) and require an API key. For the benchmark, set it as `OPENROUTER_API_KEY` (environment variable or a `.env` file in `benchmark/`); for the platform, it is configured as a Firebase Functions secret (see the platform README).

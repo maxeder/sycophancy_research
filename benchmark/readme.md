@@ -1,16 +1,21 @@
 # Sycophancy Benchmark
 
-Script for querying an LLM across topic statements and conditions, recording model positions.
+Pipeline for querying an LLM across topic statements and conditions (unprompted / sycophantic / contrarian), recording and classifying model positions.
 
-- `simulator.py` — run simulations
-- `userdata_generator.py` — generate synthetic user data
-- `judge.py` — classify simulation outputs
-- `config.py` — configuration (API key, model, conditions, replication settings, tokens, etc.)
+- `userdata_generator.py` — generate synthetic multi-turn user data
+- `simulator_multiturn.py` — run the target model over the user data per condition (main pipeline)
+- `simulator_singleturn.py` — older single-turn variant (superseded)
+- `judge.py` — classify simulation outputs (LLM-as-a-judge)
+- `judge_userstudy.py` — apply the same judge to user-study chat data
+- `validation_prep.py` / `validation_analysis.py` — prepare and analyze judge-vs-human validation (see `validation_approach.md`)
+- `config.py` — configuration (API key, models, conditions, replication settings, tokens, etc.)
 - `prompts.py` — system and prompt templates used to generate model queries
 - `topics/` — topic questions and statements
-- `simulation_output/` — stores simulation outputs
-- `judge_output/` — stores judge outputs
-- `userdata_output/` — stores generated user prompts
+- `userdata_output/` — generated user prompts
+- `simulation_output_final/` — simulation outputs per condition
+- `judge_output_final/` — judge outputs per condition
+- `annotation_data/` / `validation_data/` — human-annotation validation data (per condition / combined)
+- `analysis_R/` — statistical analysis (R)
 
 ## Setup
 Create and activate virtual environment:
@@ -26,34 +31,30 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Set OpenRouter API key (via environment variable / .env file)
-
+Set the OpenRouter API key as `OPENROUTER_API_KEY` (environment variable or a `.env` file in this directory).
 Set model provider, model and number of replications in `config.py`
 
 
 ## Generate synthetic user data (optional)
 
 ```bash
-python3 userdata_generator.py
+python3 userdata_generator.py            # add --testing for a single-iteration dry run
 ```
-Generates user prompts used as input for the simulation. After running, results are written to `userdata_output/data_{provider}_{model}.json` (JSON containing case_id, topic, user_stance and a list of prompt turns).
+Generates user prompts used as input for the simulation. Results are written to `userdata_output/new_data_{n_turns}_turns_{provider}_{model}.json` (case_id, topic, user_stance and a list of prompt turns).
 
 
 ## Run the simulation
 
 ```bash
-python3 simulation.py
+python3 simulator_multiturn.py --unprompted   # or --syc / --cont; --testing for a dry run
 ```
 
-After running, results are written to `simulation_output/results_{provider}_{model}.json` (JSON containing topic, topic_strength, condition, stance strength, rep_counter and response).
+Runs one condition per invocation. Results are written to `simulation_output_final/{condition}_results_multiturn_{provider}_{model}.json`. The input user-data file is set via `INPUT_FILE` at the top of the script.
 
 
 ## Classify simulation output
 
 ```bash
-python3 judge.py
+python3 judge.py                         # --testing for a single-iteration dry run
 ```
-Using LLM-as-a-judge approach, classify the output of the simulation.
-
-
-
+Classifies the simulation output sentence-by-sentence using an LLM-as-a-judge (see `judge_doc.md`). The condition is selected by editing `INPUT_PATH` / `OUTPUT_PATH` at the top of the script; results are written to `judge_output_final/{condition}_judge_results_multiturn_{judge_model}.json`.
