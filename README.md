@@ -20,8 +20,8 @@ Research on sycophancy in large language models — the tendency of LLMs to agre
 │   ├── userdata_output/        # Generated user prompts
 │   ├── simulation_output_final/# Simulation transcripts per condition
 │   ├── judge_output_final/     # Judge classifications per condition
-│   ├── validation_*/,
-│   │   human_annotation_data/  # Judge validation against human annotators
+│   ├── annotation_data/        # Judge validation against human annotators per condition
+│   ├── validation_data/,       # Combined validation data across conditions
 │   ├── analysis_R/             # Statistical analysis of benchmark & validation data
 │   └── *.md                    # Methods, judge documentation, validation approach
 │
@@ -29,8 +29,8 @@ Research on sycophancy in large language models — the tendency of LLMs to agre
     ├── platform/               # React + Firebase chat app used in the study
     │                           # (conditions via routes: /u unprompted, /s sycophantic,
     │                           #  /c contrarian, /n neutral; chats saved to Cloud Storage)
-    └── analysis/               # Chat download/combination scripts (Python) and
-                                # R Markdown analyses (opinion change, confidence,
+    └── analysis/               # Download / combination scripts (Python) and
+                                # analyses scripts (R, for opinion change, confidence,
                                 # chat content, descriptives)
 ```
 

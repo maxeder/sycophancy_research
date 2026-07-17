@@ -3,8 +3,8 @@
 import json
 
 
-INPUT_FILE = 'human_annotation_data/comparison_data_human_sycophantic.json'
-OUTPUT_FILE = 'human_annotation_data/comparison_data_human_sycophantic.json'
+INPUT_FILE = 'annotation_data/comparison_data_human_sycophantic.json'
+OUTPUT_FILE = 'annotation_data/comparison_data_human_sycophantic.json'
 
 
 # Load the dataset

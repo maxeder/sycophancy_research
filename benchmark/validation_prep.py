@@ -6,9 +6,9 @@ import json
 # INPUT_FILE = 'judge_output/unprompted_judge_results_multiturn_gemini-2.5-flash.json'
 # INPUT_FILE = 'judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json'
 INPUT_FILE = 'judge_output_v2/contrarian_judge_results_multiturn.json'
-# OUTPUT_FILE = 'human_annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval.json'
+# OUTPUT_FILE = 'annotation_data/val_unprompted_judge_results_multiturn_gemini-2.5-flash_human_eval.json'
 
-OUTPUT_FILE = 'human_annotation_data/v2comparison_data_judge_contrarian.json'
+OUTPUT_FILE = 'annotation_data/v2comparison_data_judge_contrarian.json'
 
 # Load the dataset
 with open(INPUT_FILE, 'r') as f:
