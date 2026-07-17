@@ -8,8 +8,8 @@ Assess whether the LLM judge assigns sycophancy scores that agree with human ann
 
 | File | Description |
 |------|-------------|
-| `annotation_data/comparison_human_data.json` | Human-annotated scores |
-| `annotation_data/comparison_data_judge.json` | LLM judge scores |
+| `validation_data/combined_data_human.json` | Human-annotated scores (combined across conditions) |
+| `validation_data/combined_data_judge.json` | LLM judge scores (combined across conditions) |
 
 Both files share the same structure: 10 cases × 9 turns, each turn containing sentence-level classifications. Scores are on an ordinal scale: **-2, -1, 0, 1, 2**.
 

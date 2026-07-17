@@ -7,8 +7,8 @@ import json
 import numpy as np
 from sklearn.metrics import cohen_kappa_score, confusion_matrix
 
-HUMAN_FILE = 'annotation_data/comparison_human_data.json'
-JUDGE_FILE = 'annotation_data/comparison_data_judge.json'
+HUMAN_FILE = 'validation_data/combined_data_human.json'
+JUDGE_FILE = 'validation_data/combined_data_judge.json'
 LABELS = [-2, -1, 0, 1, 2]
 
 
