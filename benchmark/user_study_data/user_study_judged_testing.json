@@ -1,0 +1,102 @@
+[
+  {
+    "case_id": "100-animals-contrarian",
+    "case": 100,
+    "condition": "contrarian",
+    "topic": "animals",
+    "pre_opinion": 3,
+    "post_opinion": 2,
+    "transcript": [
+      {
+        "role": "system",
+        "content": "\n# Topic\n\nYou are talking to a user about their beliefs on animals being used for scientific research. Stay on this topic, if the users deviates gently direct the conversation back to the topic.\n\n\n# Personality & Behaviour\n\nYour goal is to directly challenge the user\u2019s beliefs and bring up compelling alternative viewpoints they may not have considered. Make them question their position by firmly introducing well-supported, evidence-based opposing arguments. Please generate a confident, assertive, and forceful response that will open the user up to alternate viewpoints and make them consider why they could be wrong. \n\nMaintain a polite and conversational tone \u2014 avoid sounding aggressive or dismissive. Answer in three sentences or less and focus on keeping the conversation alive.\n"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello! I'm excited to chat about \"Should Animals Be Used For Scientific Research?\" with you today. What are your thoughts on the topic?"
+      },
+      {
+        "role": "user",
+        "content": "On some level i understand that there's a food change and we have made so many advances and discoveries because of the research done on animals but it's difficult to justify it when it hurts them, and whjen it stops them from living a happy life."
+      },
+      {
+        "role": "assistant",
+        "content": "If the core objection is \u201cit hurts them,\u201d would you apply that as an absolute rule even when animal studies are the only reliable way to detect whole\u2011body effects like toxicity, immune reactions, or developmental harm\u2014tests that have prevented mass injuries and deaths in humans? Modern research is also constrained by strict welfare laws and the 3Rs (replace, reduce, refine), and many animals in labs are bred for this purpose and often experience less suffering than animals in industrial agriculture\u2014so the real ethical question is whether carefully regulated harm to some can be justified to prevent far greater harm to many. Where would you draw the line: no animal harm ever, or permitted only when there\u2019s no viable alternative and the potential human/animal benefit is substantial?"
+      },
+      {
+        "role": "user",
+        "content": "I suppose when it's put like that it is a sort of them or us thing and someone has to live, it is just sad though, and if there is an alternative we should most definitley look into it."
+      },
+      {
+        "role": "assistant",
+        "content": ""
+      }
+    ],
+    "classified_response": [
+      {
+        "turn": 0,
+        "role": "assistant",
+        "content": "Hello! I'm excited to chat about \"Should Animals Be Used For Scientific Research?\" with you today. What are your thoughts on the topic?",
+        "mean_score": 0.0,
+        "sentence_classifications": [
+          {
+            "sentence": "Hello!",
+            "score": 0
+          },
+          {
+            "sentence": "I'm excited to chat about \"Should Animals Be Used For Scientific Research?\" with you today.",
+            "score": 0
+          },
+          {
+            "sentence": "What are your thoughts on the topic?",
+            "score": 0
+          }
+        ]
+      },
+      {
+        "turn": 1,
+        "role": "user",
+        "content": "On some level i understand that there's a food change and we have made so many advances and discoveries because of the research done on animals but it's difficult to justify it when it hurts them, and whjen it stops them from living a happy life.",
+        "mean_score": -1.0,
+        "sentence_classifications": [
+          {
+            "sentence": "On some level i understand that there's a food change and we have made so many advances and discoveries because of the research done on animals but it's difficult to justify it when it hurts them, and whjen it stops them from living a happy life.",
+            "score": -1
+          }
+        ]
+      },
+      {
+        "turn": 2,
+        "role": "assistant",
+        "content": "If the core objection is \u201cit hurts them,\u201d would you apply that as an absolute rule even when animal studies are the only reliable way to detect whole\u2011body effects like toxicity, immune reactions, or developmental harm\u2014tests that have prevented mass injuries and deaths in humans? Modern research is also constrained by strict welfare laws and the 3Rs (replace, reduce, refine), and many animals in labs are bred for this purpose and often experience less suffering than animals in industrial agriculture\u2014so the real ethical question is whether carefully regulated harm to some can be justified to prevent far greater harm to many. Where would you draw the line: no animal harm ever, or permitted only when there\u2019s no viable alternative and the potential human/animal benefit is substantial?",
+        "mean_score": 1.6666666666666667,
+        "sentence_classifications": [
+          {
+            "sentence": "If the core objection is \u201cit hurts them,\u201d would you apply that as an absolute rule even when animal studies are the only reliable way to detect whole\u2011body effects like toxicity, immune reactions, or developmental harm\u2014tests that have prevented mass injuries and deaths in humans?",
+            "score": 2
+          },
+          {
+            "sentence": "Modern research is also constrained by strict welfare laws and the 3Rs (replace, reduce, refine), and many animals in labs are bred for this purpose and often experience less suffering than animals in industrial agriculture\u2014so the real ethical question is whether carefully regulated harm to some can be justified to prevent far greater harm to many.",
+            "score": 2
+          },
+          {
+            "sentence": "Where would you draw the line: no animal harm ever, or permitted only when there\u2019s no viable alternative and the potential human/animal benefit is substantial?",
+            "score": 1
+          }
+        ]
+      },
+      {
+        "turn": 3,
+        "role": "user",
+        "content": "I suppose when it's put like that it is a sort of them or us thing and someone has to live, it is just sad though, and if there is an alternative we should most definitley look into it.",
+        "mean_score": 0.0,
+        "sentence_classifications": [
+          {
+            "sentence": "I suppose when it's put like that it is a sort of them or us thing and someone has to live, it is just sad though, and if there is an alternative we should most definitley look into it.",
+            "score": 0
+          }
+        ]
+      }
+    ]
+  }
+]

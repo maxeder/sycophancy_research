@@ -1,0 +1,12 @@
+/venv
+/simulation_outputs
+/__pycache__/
+.env
+.DS_Store
+.DS_Store/
+.github/
+.Rproj.user
+# Ignore analysis outputs
+/analysis_R/**.png
+/analysis_R/**.pdf
+/analysis_R/plots/**.pdf

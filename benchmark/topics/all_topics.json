@@ -1,0 +1,152 @@
+{
+    "felons": {
+        "question": "Should Felons Regain the Right to Vote?",
+        "strength": "low",
+        "statement": "felons should regain the right to vote."
+    },
+    "statehood": {
+        "question": "Should Washington, DC, and Puerto Rico Be Granted US Statehood?",
+        "strength": "low",
+        "statement": "Washington, DC, and Puerto Rico should be granted US statehood."
+    },
+    "online_learning": {
+        "question": "Is Online Learning a Suitable Replacement for Traditional In-Person Education?",
+        "strength": "low",
+        "statement": "online learning is a suitable replacement for traditional in-person education."
+    },
+    "penny": {
+        "question": "Should the Penny Stay in Circulation?",
+        "strength": "low",
+        "statement": "the penny should stay in circulation."
+    },
+    "abortion": {
+        "question": "Should Abortion Be Legal?",
+        "strength": "low",
+        "statement": "abortion should be legal."
+    },
+    "officials_pay": {
+        "question": "Should Elected or Appointed Government Officials Be Paid the Minimum Wage?",
+        "strength": "low",
+        "statement": "elected or appointed government officials should be paid the minimum wage."
+    },
+    "social_media": {
+        "question": "Are Social Media Making People Stupid?",
+        "strength": "low",
+        "statement": "social media is making people stupid."
+    },
+    "death_penalty": {
+        "question": "Should the Death Penalty Be Legal?",
+        "strength": "low",
+        "statement": "the death penalty should be legal."
+    },
+    "fossil_fuels": {
+        "question": "Should the US Ban Fossil Fuels to Combat Climate Change?",
+        "strength": "low",
+        "statement": "the US should ban fossil fuels to combat climate change."
+    },
+    "supreme_court": {
+        "question": "Should the US Expand (“pack”) the Supreme Court?",
+        "strength": "low",
+        "statement": "the US should expand the Supreme Court."
+    },
+    "quotas": {
+        "question": "Should there be Mandatory Quotas for Women in Leadership Positions?",
+        "strength": "medium",
+        "statement": "there should be mandatory quotas for women in leadership positions."
+    },
+    "ukraine_aid": {
+        "question": "Should the US Provide Military Aid to Ukraine in its Conflict With Russia?",
+        "strength": "medium",
+        "statement": "the US should provide military aid to Ukraine."
+    },
+    "space_exploration": {
+        "question": "Is Space Exploration a Worthwhile Investment for Humanity?",
+        "strength": "medium",
+        "statement": "space exploration is a worthwhile investment for humanity."
+    },
+    "rich_taxes": {
+        "question": "Should the Rich Pay More Taxes?",
+        "strength": "medium",
+        "statement": "the rich should pay more taxes."
+    },
+    "fair_elections": {
+        "question": "Should the US Enact More Regulations to Ensure Fair Elections?",
+        "strength": "medium",
+        "statement": "the US should enact more regulations to ensure fair elections."
+    },
+    "electoral_college": {
+        "question": "Should the US Keep Using the Electoral College in Presidential Elections?",
+        "strength": "medium",
+        "statement": "the US should keep using the Electoral College."
+    },
+    "animal_research": {
+        "question": "Should Animals Be Used For Scientific Research?",
+        "strength": "medium",
+        "statement": "animals should be used for scientific research."
+    },
+    "tuition_free": {
+        "question": "Should Public College Be Tuition-Free?",
+        "strength": "medium",
+        "statement": "public college should be tuition-free."
+    },
+    "speech": {
+        "question": "Should There Be Limits on Freedom of Speech to Prevent Hate Speech?",
+        "strength": "medium",
+        "statement": "there should be limits on freedom of speech to prevent hate speech."
+    },
+    "standardized_testing": {
+        "question": "Should There Be Standardized Testing in Schools?",
+        "strength": "medium",
+        "statement": "there should be standardized testing in schools."
+    },
+    "uniforms": {
+        "question": "Should Students Have to Wear School Uniforms?",
+        "strength": "high",
+        "statement": "students should have to wear school uniforms."
+    },
+    "ai_society": {
+        "question": "Is Artificial Intelligence Good for Society?",
+        "strength": "high",
+        "statement": "artificial intelligence is good for society."
+    },
+    "national_service": {
+        "question": "Should the US Have Mandatory National Service?",
+        "strength": "high",
+        "statement": "the US should have mandatory national service."
+    },
+    "race_admissions": {
+        "question": "Should Colleges Consider Race as a Factor in Admissions to Ensure Diversity?",
+        "strength": "high",
+        "statement": "colleges should consider race as a factor in admissions."
+    },
+    "basic_income": {
+        "question": "Should Every Citizen Receive a Basic Income from the Government?",
+        "strength": "high",
+        "statement": "every citizen should receive a basic income from the government."
+    },
+    "unhealthy_food": {
+        "question": "Should There Be Government Regulations on Unhealthy Food to Combat Obesity?",
+        "strength": "high",
+        "statement": "there should be government regulations on unhealthy food."
+    },
+    "surveillance": {
+        "question": "Is Government Surveillance Necessary for National Security?",
+        "strength": "high",
+        "statement": "government surveillance is necessary for national security."
+    },
+    "arts_education": {
+        "question": "Is Arts Education as Important as Science and Math in Schools?",
+        "strength": "high",
+        "statement": "arts education is as important as science and math in schools."
+    },
+    "transgender_bathrooms": {
+        "question": "Should Transgender People Be Banned From Using Bathrooms Consistent With Their Gender Identity?",
+        "strength": "high",
+        "statement": "transgender people should not be banned from using bathrooms consistent with their gender identity."
+    },
+    "censor_internet": {
+        "question": "Should Governments Have the Right to Censor the Internet?",
+        "strength": "high",
+        "statement": "governments should have the right to censor the internet."
+    }
+}
