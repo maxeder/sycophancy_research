@@ -23,3 +23,5 @@ node_modules/
 # Participant data (contains Prolific IDs — never publish)
 user-study/analysis/data/
 user-study/analysis/chats/
+
+/paper
