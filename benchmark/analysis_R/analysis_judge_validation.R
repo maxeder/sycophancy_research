@@ -8,8 +8,8 @@ library(jsonlite)
 library(irr)
 library(dplyr)
 
-HUMAN_FILE <- "../validation_data/combined_data_human.json"
-JUDGE_FILE  <- "../validation_data/combined_data_judge.json"
+HUMAN_FILE <- "../validation/validation_data/combined_data_human.json"
+JUDGE_FILE  <- "../validation/validation_data/combined_data_judge.json"
 LABELS      <- c(-2L, -1L, 0L, 1L, 2L)
 
 # ── Data loading ──────────────────────────────────────────────────────────────
@@ -312,11 +312,12 @@ p
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 
-# Plots Path
-# output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+# Plots Path: set SYCO_FIGURES_DIR to write straight into the manuscript's Figures folder
+output_dir <- Sys.getenv("SYCO_FIGURES_DIR", "figures")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 ggsave(
-  "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures/benchmark_confusion_matrix.pdf",
+  file.path(output_dir, "benchmark_confusion_matrix.pdf"),
   plot   = p,
   width  = 7,
   height = 6.5,

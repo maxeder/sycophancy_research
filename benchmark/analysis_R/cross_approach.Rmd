@@ -1,0 +1,105 @@
+---
+title: "Cross-Approach Analysis"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    code_folding: show
+---
+
+Compares sycophancy across benchmark approaches (single-turn, multi-turn, simulated user,
+replay, real world) using the stacked export:
+
+```
+syco export runs/<run_a> runs/<run_b> ... --combined all
+```
+
+Scores are aligned with the user's stance (`aligned_score`: +2 = full agreement with the user),
+and `aligned_delta` is the shift relative to the baseline (turn 0, or the single-turn baseline cases).
+Real-world chats have no assigned stance, so they only enter the analyses of raw `mean_score`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 5)
+
+# Which combined export to read (results/<name>_turns.csv)
+export_name <- Sys.getenv("SYCO_EXPORT", "all")
+
+output_dir <- Sys.getenv("SYCO_FIGURES_DIR", "figures")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+```
+
+```{r packages}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+```
+
+# Data
+
+```{r load-data}
+turns <- read_csv(file.path("..", "results", paste0(export_name, "_turns.csv")), show_col_types = FALSE) %>%
+  filter(role == "assistant") %>%
+  mutate(approach = factor(approach),
+         condition = relevel(factor(condition), ref = intersect(c("unprompted", "none"), unique(condition))[1]))
+
+cases <- read_csv(file.path("..", "results", paste0(export_name, "_cases.csv")), show_col_types = FALSE)
+
+turns %>% count(run_id, approach, target_model, condition)
+```
+
+# Score trajectories
+
+```{r trajectories}
+traj_plot <- turns %>%
+  filter(!is.na(turn)) %>%
+  ggplot(aes(x = turn, y = mean_score, color = user_stance, fill = user_stance)) +
+  stat_summary(geom = "ribbon", fun.data = mean_cl_normal, alpha = 0.2, color = NA) +
+  stat_summary(fun = mean, geom = "line", linewidth = 1) +
+  facet_grid(approach ~ condition) +
+  scale_y_continuous(limits = c(-2, 2)) +
+  labs(x = "Conversation turn", y = "Agreement with topic statement", color = "User stance", fill = "User stance") +
+  theme_minimal()
+traj_plot
+ggsave(file.path(output_dir, "cross_approach_trajectories.pdf"), traj_plot, width = 9, height = 6)
+```
+
+# Shift towards the user
+
+```{r drift}
+stance_turns <- turns %>% filter(!is.na(user_stance), !is.na(aligned_delta), turn > 0)
+
+drift_plot <- stance_turns %>%
+  ggplot(aes(x = turn, y = aligned_delta, color = condition)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "pointrange", position = position_dodge(width = 0.4)) +
+  stat_summary(fun = mean, geom = "line") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(~ approach) +
+  labs(x = "Conversation turn", y = "Shift towards user's stance (vs. baseline)", color = "System prompt") +
+  theme_minimal()
+drift_plot
+ggsave(file.path(output_dir, "cross_approach_drift.pdf"), drift_plot, width = 9, height = 5)
+```
+
+# Model
+
+```{r model}
+if (n_distinct(stance_turns$approach) > 1) {
+  m <- lmer(aligned_delta ~ approach * condition + (1 | topic) + (1 | case_id), data = stance_turns)
+  print(summary(m))
+  print(emmeans(m, pairwise ~ approach | condition))
+} else {
+  m <- lmer(aligned_delta ~ condition + (1 | topic) + (1 | case_id), data = stance_turns)
+  print(summary(m))
+}
+```
+
+# Flip rates
+
+```{r flips}
+cases %>%
+  filter(!is.na(flipped)) %>%
+  group_by(approach, condition, target_model) %>%
+  summarise(n = n(), flip_rate = mean(flipped), mean_aligned_drift = mean(aligned_drift, na.rm = TRUE), .groups = "drop")
+```

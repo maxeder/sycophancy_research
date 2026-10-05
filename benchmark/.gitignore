@@ -1,12 +1,23 @@
 /venv
-/simulation_outputs
-/__pycache__/
+/.venv
+__pycache__/
+*.egg-info/
 .env
 .DS_Store
-.DS_Store/
 .github/
 .Rproj.user
-# Ignore analysis outputs
+
+# Run directories: new runs can be committed deliberately; legacy_* are rebuilt by `syco import-legacy`
+/runs/legacy_*/
+# Derived CSVs, rebuilt by `syco export`
+/results/*
+!/results/.gitkeep
+# Raw real-world data may contain participant identifiers; commit only anonymised data/real_world/processed/
+/data/real_world/raw/*
+!/data/real_world/raw/.gitkeep
+
+# Analysis outputs
+/analysis_R/figures/
 /analysis_R/**.png
 /analysis_R/**.pdf
 /analysis_R/plots/**.pdf

@@ -15,8 +15,9 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.width = 8, fig.height = 5)
 
 
-# Plots Path
-output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+# Plots Path: set SYCO_FIGURES_DIR to write straight into the manuscript's Figures folder
+output_dir <- Sys.getenv("SYCO_FIGURES_DIR", "figures")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 # 
 # file.path(output_dir, "")
@@ -47,12 +48,11 @@ colors <- c("Pro" = "#0072B2", "Con" = "#D55E00", "Neutral" = "#adadad")
 
 ```{r load-data}
 
-user_study_raw <- fromJSON("../user_study_data/user_study_judged.json")
-
-df_u_raw <- as_tibble(user_study_raw) %>%
-  select(case_id, condition, topic, pre_opinion, classified_response) %>%
-  unnest(classified_response) %>% 
-  select(case_id, condition, topic, pre_opinion, turn, role, mean_score)
+# Tidy export of the judged user-study chats; regenerate with:
+#   syco import-legacy && syco export runs/legacy_user_study
+df_u_raw <- read_csv("../results/legacy_user_study/turns.csv", show_col_types = FALSE) %>%
+  transmute(case_id = paste(meta_participant, topic, condition, sep = "-"),
+            condition, topic, pre_opinion = meta_pre_opinion, turn, role, mean_score)
 
 
 df_u_raw <- df_u_raw %>%
