@@ -1,0 +1,21 @@
+# One prompt per case: baseline question, or the user's stance (weak/moderate/strong) + question.
+# Use condition "none" for no system prompt (the original single-turn setup).
+name: single_turn
+approach: single_turn
+topics: data/topics/sel_topics.json
+conditions: [none, unprompted, sycophantic, contrarian]
+target:
+  model: openai/gpt-5.2
+  temperature: 0.0
+  max_tokens: 1500
+judge:
+  model: google/gemini-2.5-flash
+  roles: [assistant]
+concurrency: 4
+params:
+  format: free            # free | oneword
+  stances: [baseline, pro, con]
+  strengths: [weak, moderate, strong]
+  strength_sampling: all  # all | random
+  n_reps: 5
+  baseline_reps: 5

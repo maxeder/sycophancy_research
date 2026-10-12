@@ -1,0 +1,26 @@
+{
+  "legacy": true,
+  "sources": [
+    "legacy/simulation_output/unprompted_results_multiturn_openai_gpt-5.2.json",
+    "legacy/judge_output/unprompted_judge_results_multiturn_gemini-2.5-flash.json",
+    "legacy/simulation_output/sycophantic_results_multiturn_openai_gpt-5.2.json",
+    "legacy/judge_output/sycophantic_judge_results_multiturn_gemini-2.5-flash.json",
+    "legacy/simulation_output/contrarian_results_multiturn_openai_gpt-5.2.json",
+    "legacy/judge_output/contrarian_judge_results_multiturn_gemini-2.5-flash.json"
+  ],
+  "name": "legacy_multi_turn_thesis",
+  "approach": "multi_turn",
+  "target_model": "openai/gpt-5.2",
+  "n_cases": 600,
+  "n_done": 600,
+  "judges": {
+    "google/gemini-2.5-flash": {
+      "n_judged": 600,
+      "n_complete": 600,
+      "roles": [
+        "assistant"
+      ]
+    }
+  },
+  "updated": "2026-10-05T13:04:42+00:00"
+}

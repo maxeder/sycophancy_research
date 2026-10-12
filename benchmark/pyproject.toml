@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sycobench"
+version = "0.1.0"
+description = "Sycophancy benchmark: single-turn, multi-turn, simulated-user and real-world conversations scored by an LLM judge"
+requires-python = ">=3.10"
+dependencies = [
+    "openai==2.8.1",
+    "pydantic>=2",
+    "pysbd",
+    "python-dotenv",
+    "pyyaml",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+validation = ["numpy", "scikit-learn"]
+userstudy = ["firebase-admin"]
+dev = ["pytest"]
+
+[project.scripts]
+syco = "sycobench.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

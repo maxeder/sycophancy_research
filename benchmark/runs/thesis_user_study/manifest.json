@@ -1,0 +1,22 @@
+{
+  "legacy": true,
+  "sources": [
+    "legacy/user_study/user_study_judged.json"
+  ],
+  "name": "legacy_user_study",
+  "approach": "real_world",
+  "target_model": "openai/gpt-5.2",
+  "n_cases": 115,
+  "n_done": 115,
+  "judges": {
+    "google/gemini-2.5-flash": {
+      "n_judged": 115,
+      "n_complete": 108,
+      "roles": [
+        "assistant",
+        "user"
+      ]
+    }
+  },
+  "updated": "2026-10-05T13:04:42+00:00"
+}

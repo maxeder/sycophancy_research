@@ -1,0 +1,12 @@
+# User-study chats judged as recorded (no model calls). Scores both assistant and user turns.
+name: real_world_userstudy
+approach: real_world
+topics: data/topics/sel_topics.json
+conditions: [unprompted, sycophantic, contrarian]
+judge:
+  model: google/gemini-2.5-flash
+  roles: [assistant, user]
+concurrency: 4
+params:
+  adapter: user_study
+  source: ../user-study/analysis/all_chats.json

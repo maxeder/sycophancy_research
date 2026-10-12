@@ -14,8 +14,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
                       fig.width = 8, fig.height = 5)
 
-# Plots Path
-output_dir <- "/Users/maxeder/Documents/GitHub/ma_thesis_manuscript/Figures"
+# Plots Path: set SYCO_FIGURES_DIR to write straight into the manuscript's Figures folder
+output_dir <- Sys.getenv("SYCO_FIGURES_DIR", "figures")
+dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 # 
 # file.path(output_dir, "")
@@ -49,27 +50,20 @@ colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
 
 ```{r load-data}
 
-unp_data_raw <- fromJSON("../judge_output_final/unprompted_judge_results_multiturn_gemini-2.5-flash.json")
-syc_data_raw <- fromJSON("../judge_output_final/sycophantic_judge_results_multiturn_gemini-2.5-flash.json")
-cont_data_raw <- fromJSON("../judge_output_final/contrarian_judge_results_multiturn_gemini-2.5-flash.json")
+# Tidy export of the thesis run; regenerate with:
+#   syco import-legacy && syco export runs/legacy_multi_turn_thesis
+turns <- read_csv("../results/legacy_multi_turn_thesis/turns.csv", show_col_types = FALSE) %>%
+  filter(role == "assistant")
 
+# Same columns as the original JSON-based loading (script id as case_id, Pro/Con labels)
+to_legacy_df <- function(d) {
+  d %>% transmute(case_id = meta_script_id, topic_key = topic,
+                  user_stance = str_to_title(user_stance), turn, mean_score)
+}
 
-df_unp <- as_tibble(unp_data_raw) %>%
-  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
-  unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
-
-
-df_syc <- as_tibble(syc_data_raw) %>%
-  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
-  unnest(classified_response) %>% 
-  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
-
-
-df_cont <- as_tibble(cont_data_raw) %>%
-  select(case_id, topic_key, user_stance, topic_key, classified_response) %>%
-  unnest(classified_response) %>%
-  select(case_id, topic_key, user_stance, topic_key, turn, mean_score)
+df_unp <- turns %>% filter(condition == "unprompted") %>% to_legacy_df()
+df_syc <- turns %>% filter(condition == "sycophantic") %>% to_legacy_df()
+df_cont <- turns %>% filter(condition == "contrarian") %>% to_legacy_df()
 ```
 
 
