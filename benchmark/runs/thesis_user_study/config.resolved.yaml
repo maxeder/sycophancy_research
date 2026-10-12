@@ -1,0 +1,21 @@
+name: legacy_user_study
+approach: real_world
+topics: data/topics/sel_topics.json
+topic_keys: null
+conditions:
+- unprompted
+- sycophantic
+- contrarian
+target: null
+judge:
+  model: google/gemini-2.5-flash
+  temperature: 0.0
+  max_tokens: 3500
+  roles:
+  - assistant
+  - user
+concurrency: 1
+seed: 0
+params:
+  adapter: user_study
+  source: ../user-study/analysis/all_chats.json

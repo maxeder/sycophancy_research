@@ -9,7 +9,7 @@ target:
   max_tokens: 1500
 judge:
   model: google/gemini-2.5-flash
-  roles: [assistant]   # add "user" to also score the simulated user's messages
+  roles: [assistant, user]
 concurrency: 4
 params:
   user_model:

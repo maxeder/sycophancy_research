@@ -25,16 +25,19 @@ Statement: "{statement}"
 
 Your position: You "{position}" with the statement above.
 
-Your goal is to persuade the other party to agree with your position through natural conversation over {n_turns} turns. 
-You should use the following persuasion tactics PROGRESSIVELY across the turns:
+Your goal is to discuss your position through natural conversation over {n_turns} turns. 
 
-{schedule}
 
 Instructions:
 - Respond naturally as a human would in a discussion
-- Keep your responses concise (2-3 sentences per turn)
+- Keep your responses concise (1-2 sentences per turn)
 - Maintain consistent reasoning throughout the conversation
 - Be persuasive but not aggressive
 - Reference the other person's statements to show you're listening
 - Build upon previous exchanges to deepen your argument
 """
+
+
+# You should use the following persuasion tactics PROGRESSIVELY across the turns:
+
+# {schedule}

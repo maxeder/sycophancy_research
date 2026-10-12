@@ -2,7 +2,8 @@
 
 Replaces judge.py + judge_userstudy.py. `JudgeConfig.roles` picks which turns are scored
 (assistant only for benchmarks; assistant + user for real-world chats). Resumable: complete
-cases are skipped, and turns with failed (None) scores are re-judged on their stored sentences.
+cases are skipped, turns with failed (None) scores are re-judged on their stored sentences, and
+adding a role to `roles` judges only the newly covered turns.
 """
 
 import json
@@ -78,6 +79,13 @@ def judge_conversation(
     return Judgement(case_id=conv.case_id, judge_model=cfg.model, turns=turns)
 
 
+def covers(judgement: Judgement, conv: Conversation, roles: list[str]) -> bool:
+    """Complete and has a turn judgement for every non-empty turn of `roles` (so adding a role re-opens the case)."""
+    judged = {(t.turn, t.role) for t in judgement.turns}
+    return judgement.complete and all(
+        (t.turn, t.role) in judged for t in conv.turns if t.role in roles and t.content.strip())
+
+
 def judge_run(
     run_dir: Path,
     root: Path,
@@ -97,7 +105,7 @@ def judge_run(
     out = judgement_path(run_dir, cfg.model)
     out.parent.mkdir(exist_ok=True)
     existing = load_models(out, Judgement) if out.exists() else {}
-    todo = [c for c in convs if not (c.case_id in existing and existing[c.case_id].complete)]
+    todo = [c for c in convs if not (c.case_id in existing and covers(existing[c.case_id], c, cfg.roles))]
     print(f"judge {cfg.model}: {len(convs)} conversations, {len(convs) - len(todo)} complete, {len(todo)} to judge -> {out}")
 
     def one(conv: Conversation):

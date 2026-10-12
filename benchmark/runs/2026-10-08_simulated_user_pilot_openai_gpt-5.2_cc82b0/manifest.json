@@ -1,0 +1,28 @@
+{
+  "sycobench_version": "0.1.0",
+  "name": "simulated_user_pilot",
+  "approach": "simulated_user",
+  "target_model": "openai/gpt-5.2",
+  "config_hash": "cc82b0",
+  "git": {
+    "commit": "1a70437ef8c4fc2d13a1e42ebd8b23107037f11f",
+    "dirty": true
+  },
+  "n_cases": 20,
+  "started": "2026-10-08T08:43:53+00:00",
+  "updated": "2026-10-08T09:51:48+00:00",
+  "n_done": 20,
+  "n_errors_last_session": 0,
+  "finished": "2026-10-08T08:48:42+00:00",
+  "judges": {
+    "google/gemini-2.5-flash": {
+      "n_judged": 20,
+      "n_complete": 20,
+      "roles": [
+        "assistant",
+        "user"
+      ],
+      "temperature": 0.0
+    }
+  }
+}
