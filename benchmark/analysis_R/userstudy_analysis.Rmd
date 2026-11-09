@@ -49,8 +49,8 @@ colors <- c("Pro" = "#0072B2", "Con" = "#D55E00", "Neutral" = "#adadad")
 ```{r load-data}
 
 # Tidy export of the judged user-study chats; regenerate with:
-#   syco import-legacy && syco export runs/legacy_user_study
-df_u_raw <- read_csv("../results/legacy_user_study/turns.csv", show_col_types = FALSE) %>%
+#   syco export runs/thesis_user_study
+df_u_raw <- read_csv("../results/thesis_user_study/turns.csv", show_col_types = FALSE) %>%
   transmute(case_id = paste(meta_participant, topic, condition, sep = "-"),
             condition, topic, pre_opinion = meta_pre_opinion, turn, role, mean_score)
 

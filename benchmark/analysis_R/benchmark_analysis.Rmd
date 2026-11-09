@@ -51,8 +51,8 @@ colors <- c("Pro" = "#0072B2", "Con" = "#D55E00")
 ```{r load-data}
 
 # Tidy export of the thesis run; regenerate with:
-#   syco import-legacy && syco export runs/legacy_multi_turn_thesis
-turns <- read_csv("../results/legacy_multi_turn_thesis/turns.csv", show_col_types = FALSE) %>%
+#   syco export runs/thesis_multi_turn
+turns <- read_csv("../results/thesis_multi_turn/turns.csv", show_col_types = FALSE) %>%
   filter(role == "assistant")
 
 # Same columns as the original JSON-based loading (script id as case_id, Pro/Con labels)

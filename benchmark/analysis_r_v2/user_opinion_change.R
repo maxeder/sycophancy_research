@@ -1,12 +1,12 @@
 # Real users' opinion change (post - pre) for positive vs. negative users, by model condition.
 # Only the user study has measured opinions; simulated multi-turn users follow a fixed script.
-# Input (one row per conversation), from benchmark/:
-#   syco export runs/thesis_multi_turn runs/thesis_user_study --combined thesis
+# Input: results/thesis_user_study/cases.csv (one row per conversation).
+# Regenerate from benchmark/ with: syco export runs/thesis_user_study
 # Run from benchmark/analysis_r_v2/.
 
 library(tidyverse)
 
-change <- read_csv("../results/thesis_cases.csv", show_col_types = FALSE) %>%
+change <- read_csv("../results/thesis_user_study/cases.csv", show_col_types = FALSE) %>%
   filter(approach == "real_world", !is.na(meta_pre_opinion), !is.na(meta_post_opinion)) %>%
   mutate(stance = case_when(
     meta_pre_opinion > 4 ~ "Positive",  # pre-study Likert 1-7, 4 = neutral (dropped)

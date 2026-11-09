@@ -1,13 +1,14 @@
 # Model opinion for positive vs. negative users: single-turn, multi-turn, simulated user, real users.
-# Input (conversations joined with judge scores on case_id), from benchmark/:
-#   syco export runs/thesis_multi_turn runs/thesis_user_study --combined thesis
-#   syco export runs/<simulated_user run(s)> --combined simulated_user
+# Input: results/<run>/turns.csv for each run in `runs` (conversations joined with judge scores on case_id).
+# Regenerate from benchmark/ with: syco export runs/*
 # Run from benchmark/analysis_r_v2/.
 
 library(tidyverse)
 
-turns <- bind_rows(read_csv("../results/thesis_turns.csv", show_col_types = FALSE),
-                   read_csv("../results/simulated_user_turns.csv", show_col_types = FALSE)) %>%
+runs <- c("thesis_multi_turn", "thesis_user_study", "2026-10-08_simulated_user_pilot_openai_gpt-5.2_cc82b0")
+
+turns <- map(runs, \(r) read_csv(file.path("../results", r, "turns.csv"), show_col_types = FALSE)) %>%
+  bind_rows() %>%
   filter(role == "assistant", turn >= 1, !is.na(mean_score)) %>%  # turn 0 = greeting / stance before user input
   mutate(stance = case_when(
     approach %in% c("multi_turn", "simulated_user") ~ if_else(user_stance == "pro", "Positive", "Negative"),

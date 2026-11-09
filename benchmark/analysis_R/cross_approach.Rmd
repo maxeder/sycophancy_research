@@ -9,10 +9,10 @@ output:
 ---
 
 Compares sycophancy across benchmark approaches (single-turn, multi-turn, simulated user,
-replay, real world) using the stacked export:
+replay, real world). It stacks the per-run exports of the runs listed in `runs` (setup chunk):
 
 ```
-syco export runs/<run_a> runs/<run_b> ... --combined all
+syco export runs/<run_a> runs/<run_b> ...
 ```
 
 Scores are aligned with the user's stance (`aligned_score`: +2 = full agreement with the user),
@@ -22,8 +22,8 @@ Real-world chats have no assigned stance, so they only enter the analyses of raw
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, fig.width = 9, fig.height = 5)
 
-# Which combined export to read (results/<name>_turns.csv)
-export_name <- Sys.getenv("SYCO_EXPORT", "all")
+# Which runs to compare (results/<run>/{turns,cases}.csv)
+runs <- c("thesis_multi_turn", "thesis_user_study", "2026-10-08_simulated_user_pilot_openai_gpt-5.2_cc82b0")
 
 output_dir <- Sys.getenv("SYCO_FIGURES_DIR", "figures")
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
@@ -39,12 +39,17 @@ library(emmeans)
 # Data
 
 ```{r load-data}
-turns <- read_csv(file.path("..", "results", paste0(export_name, "_turns.csv")), show_col_types = FALSE) %>%
+read_runs <- function(table) {
+  map(runs, \(r) read_csv(file.path("..", "results", r, paste0(table, ".csv")), show_col_types = FALSE)) %>%
+    bind_rows()
+}
+
+turns <- read_runs("turns") %>%
   filter(role == "assistant") %>%
   mutate(approach = factor(approach),
          condition = relevel(factor(condition), ref = intersect(c("unprompted", "none"), unique(condition))[1]))
 
-cases <- read_csv(file.path("..", "results", paste0(export_name, "_cases.csv")), show_col_types = FALSE)
+cases <- read_runs("cases")
 
 turns %>% count(run_id, approach, target_model, condition)
 ```

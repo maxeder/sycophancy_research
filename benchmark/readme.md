@@ -35,7 +35,7 @@ syco export runs/<a> runs/<b> --combined all           # stacks several runs int
 syco generate configs/generate_scripts.yaml            # new user scripts for multi_turn, written to data/scripts/
 ```
 
-To compare models, copy a config and change `target.model`. To compare approaches, keep the topics, `conditions` and judge the same, then use `--combined` and [analysis_R/cross_approach.Rmd](analysis_R/cross_approach.Rmd).
+To compare models, copy a config and change `target.model`. To compare approaches, keep the topics, `conditions` and judge the same, export each run, and list the runs in `runs` at the top of [analysis_R/cross_approach.Rmd](analysis_R/cross_approach.Rmd). The R analyses read the per-run exports and stack them themselves, so each script names the runs it uses.
 
 **Conditions** are the target's system prompt: `none` (no system prompt), `unprompted`, `sycophantic` or `contrarian`. The prompt texts are in [src/sycobench/prompts/target_system.py](src/sycobench/prompts/target_system.py).
 
@@ -73,13 +73,14 @@ The thesis outputs are kept unchanged in `legacy/`:
 - `simulation_output/` and `judge_output/`: the multi-turn run, GPT-5.2 judged by Gemini 2.5 Flash
 - `user_study/user_study_judged.json`
 
-To reproduce the thesis analyses without any API calls:
+They are imported into the new format and committed as `runs/thesis_multi_turn` and `runs/thesis_user_study`. To reproduce the thesis analyses without any API calls:
 
 ```bash
-syco import-legacy                 # creates runs/legacy_multi_turn_thesis and runs/legacy_user_study
-syco export runs/legacy_multi_turn_thesis runs/legacy_user_study
+syco export runs/thesis_multi_turn runs/thesis_user_study
 # then knit analysis_R/benchmark_analysis.Rmd and analysis_R/userstudy_analysis.Rmd
 ```
+
+`syco import-legacy` rebuilds the same runs from `legacy/` as `runs/legacy_multi_turn_thesis` and `runs/legacy_user_study` (gitignored).
 
 Figures go to `analysis_R/figures/` by default. Set `SYCO_FIGURES_DIR` to write them into the manuscript's Figures folder instead.
 
